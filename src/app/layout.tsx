@@ -22,7 +22,7 @@ const fraunces = Fraunces({
 });
 
 const siteUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-const title = "HardCap | Know your number";
+const title = "HardCap";
 const description =
   "HardCap is a personal expense and budget tracker: set hard spending caps per category, log expenses in seconds, and see your real-time remaining balance - no drift, no spreadsheets.";
 
