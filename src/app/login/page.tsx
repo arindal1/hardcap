@@ -9,6 +9,8 @@ import { NeuButton } from "@/components/NeuButton";
 import { AmbientField } from "@/components/AmbientField";
 import { RevealOnMount } from "@/components/RevealOnMount";
 
+export const dynamic = "force-dynamic";
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");

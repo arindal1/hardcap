@@ -10,6 +10,8 @@ import { AmbientField } from "@/components/AmbientField";
 import { RevealOnMount } from "@/components/RevealOnMount";
 import { apiFetch } from "@/lib/api-client";
 
+export const dynamic = "force-dynamic";
+
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist_Mono, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { CustomCursor } from "@/components/CustomCursor";
 import { GrainOverlay } from "@/components/GrainOverlay";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -72,7 +71,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <GrainOverlay />
-        <CustomCursor />
         <Providers>{children}</Providers>
       </body>
     </html>

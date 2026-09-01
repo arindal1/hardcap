@@ -89,21 +89,6 @@ body {
   background: var(--color-accent-strong);
 }
 
-/* Custom cursor replaces the system arrow on fine-pointer (mouse/trackpad) devices only. */
-@media (pointer: fine) {
-  body {
-    cursor: none;
-  }
-  a,
-  button,
-  input,
-  select,
-  textarea,
-  [role="button"] {
-    cursor: none;
-  }
-}
-
 /* Fixed film-grain overlay - the single texture pass for the whole app. */
 .grain-overlay {
   position: fixed;
@@ -114,12 +99,6 @@ body {
   mix-blend-mode: overlay;
 }
 
-/* Custom cursor dot/ring - only meaningful on fine-pointer, motion-enabled devices. */
-@media (pointer: coarse), (prefers-reduced-motion: reduce) {
-  .cursor-fx {
-    display: none;
-  }
-}
 
 /* Editorial furniture: numbered eyebrows + hairline rules used across every page header. */
 .eyebrow {
