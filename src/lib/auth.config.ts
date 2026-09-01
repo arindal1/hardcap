@@ -9,6 +9,7 @@ export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [],
+  trustHost: true,
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) token.id = user.id;
