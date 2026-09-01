@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## [0.3.2]
+
+### Fixed
+- Dashboard hero balance figure could overflow/clip on narrow phones (≤375px) — the currency string is a single unbreakable token and was locked to a 60px font size below the `sm` breakpoint. Now scales from `text-4xl` on mobile.
+- Mobile bottom tab bar labels ("Dashboard", "Expenses", etc.) could wrap or crowd on small phones — tightened spacing and added `truncate`/`min-w-0` guards.
+- Dashboard chart tick labels (group names, dates) could overlap on narrow chart widths — reduced tick font size and thinned chart card padding on mobile.
+
+
 ## [0.3.1]
 
 ### Changed

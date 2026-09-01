@@ -5,13 +5,13 @@ import type { DailyPoint } from "./SpendOverTimeChart";
 
 export function OverallBalanceTrendChart({ data }: { data: DailyPoint[] }) {
   return (
-    <div className="neu-raised p-6">
+    <div className="neu-raised p-4 sm:p-6">
       <p className="eyebrow mb-6">Balance remaining over the month</p>
       <ResponsiveContainer width="100%" height={260}>
-        <LineChart data={data}>
+        <LineChart data={data} margin={{ left: -20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-          <XAxis dataKey="date" stroke="var(--color-text-muted)" fontSize={12} />
-          <YAxis stroke="var(--color-text-muted)" fontSize={12} />
+          <XAxis dataKey="date" stroke="var(--color-text-muted)" fontSize={10} interval="preserveStartEnd" tickMargin={8} />
+          <YAxis stroke="var(--color-text-muted)" fontSize={10} width={48} />
           <Tooltip
             contentStyle={{
               background: "var(--color-surface)",

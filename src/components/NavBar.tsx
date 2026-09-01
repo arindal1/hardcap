@@ -68,15 +68,15 @@ export function NavBar() {
 
 function BottomNav({ pathname }: { pathname: string }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
-      <div className="neu-raised flex w-full max-w-md items-center justify-between px-2 py-2">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-3 md:hidden">
+      <div className="neu-raised flex w-full max-w-md items-center justify-between gap-0.5 px-1 py-2 sm:gap-1 sm:px-2">
         {links.map((link) => {
           const active = pathname === link.href;
           return (
             <Link
               key={link.href}
               href={link.href}
-              className="focus-ring relative flex flex-1 flex-col items-center gap-1 px-1 py-2"
+              className="focus-ring relative flex min-w-0 flex-1 flex-col items-center gap-1 px-0.5 py-2"
               aria-current={active ? "page" : undefined}
             >
               {active && (
@@ -87,14 +87,14 @@ function BottomNav({ pathname }: { pathname: string }) {
                 />
               )}
               <span
-                className={`font-(family-name:--font-mono) relative z-10 text-[10px] tracking-[0.2em] ${
+                className={`font-(family-name:--font-mono) relative z-10 text-[9px] tracking-[0.15em] sm:text-[10px] sm:tracking-[0.2em] ${
                   active ? "text-(--color-accent-strong)" : "text-(--color-text-muted)"
                 }`}
               >
                 {link.glyph}
               </span>
               <span
-                className={`relative z-10 text-[11px] ${
+                className={`relative z-10 w-full truncate text-center text-[10px] sm:text-[11px] ${
                   active ? "text-(--color-accent-strong)" : "text-(--color-text-secondary)"
                 }`}
               >

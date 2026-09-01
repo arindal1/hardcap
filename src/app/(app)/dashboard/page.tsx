@@ -74,7 +74,7 @@ export default function DashboardPage() {
         <section className="neu-raised p-6 sm:p-10">
           <p className="eyebrow">01 — Overall remaining</p>
           <p
-            className={`tabular mt-6 font-(family-name:--font-display) text-6xl italic leading-none sm:text-7xl lg:text-8xl ${
+            className={`tabular mt-6 break-words font-(family-name:--font-display) text-4xl italic leading-none sm:text-6xl lg:text-8xl ${
               data.overallRemaining < 0 ? "text-(--color-danger)" : "text-(--color-accent-strong)"
             }`}
           >
