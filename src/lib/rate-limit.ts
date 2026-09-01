@@ -1,5 +1,5 @@
 /**
- * In-memory sliding-window rate limiter. Per-process only — resets on
+ * In-memory sliding-window rate limiter. Per-process only - resets on
  * deploy/restart and does not coordinate across multiple server instances.
  * Sufficient as a best-effort guard against brute-force/spam on
  * unauthenticated endpoints for a single-instance deployment; swap for a
@@ -45,15 +45,15 @@ export function isRateLimited(key: string, limit: number, windowMs: number): boo
  * is attacker-controlled: a client can send its own value and, depending on
  * the proxy chain, it is only appended to (not replaced), so the leftmost
  * entry can't be trusted as-is. Preference order:
- *   1. `x-vercel-forwarded-for` — set by Vercel's edge network itself on the
+ *   1. `x-vercel-forwarded-for` - set by Vercel's edge network itself on the
  *      assumed hosting target, not client-settable.
- *   2. `x-real-ip` — set by most conventional reverse proxies (nginx, etc.)
+ *   2. `x-real-ip` - set by most conventional reverse proxies (nginx, etc.)
  *      to the real connecting peer, not client-settable when configured
  *      correctly.
- *   3. Rightmost entry of `x-forwarded-for` — the value appended by the
+ *   3. Rightmost entry of `x-forwarded-for` - the value appended by the
  *      hop closest to this server, which is the most trustworthy segment
  *      of an otherwise client-influenced chain.
- * This is still best-effort behind an untrusted/misconfigured proxy — it
+ * This is still best-effort behind an untrusted/misconfigured proxy - it
  * cannot be made fully spoof-proof without knowing the exact proxy topology.
  */
 export function getClientIp(request: Request): string {

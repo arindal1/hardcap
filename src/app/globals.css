@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * HardCap design tokens — dark luxury neumorphism.
+ * HardCap design tokens - dark luxury neumorphism.
  * Palette: warm charcoal base + champagne-gold accent.
  * Neumorphic depth comes from a paired light/dark shadow on a
  * near-flat surface color, not from borders or drop-shadow defaults.
@@ -72,7 +72,7 @@ body {
   color: var(--color-canvas);
 }
 
-/* Custom scrollbar — thin gold rail on charcoal track. */
+/* Custom scrollbar - thin gold rail on charcoal track. */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -104,7 +104,7 @@ body {
   }
 }
 
-/* Fixed film-grain overlay — the single texture pass for the whole app. */
+/* Fixed film-grain overlay - the single texture pass for the whole app. */
 .grain-overlay {
   position: fixed;
   inset: 0;
@@ -114,7 +114,7 @@ body {
   mix-blend-mode: overlay;
 }
 
-/* Custom cursor dot/ring — only meaningful on fine-pointer, motion-enabled devices. */
+/* Custom cursor dot/ring - only meaningful on fine-pointer, motion-enabled devices. */
 @media (pointer: coarse), (prefers-reduced-motion: reduce) {
   .cursor-fx {
     display: none;
@@ -153,7 +153,7 @@ body {
 /*
  * Native form-control chrome (number steppers, select arrow/popup, date &
  * time picker icons) defaults to OS light-theme rendering and is invisible
- * or jarring against the dark surfaces — restyled to sit inside them.
+ * or jarring against the dark surfaces - restyled to sit inside them.
  */
 input,
 select,

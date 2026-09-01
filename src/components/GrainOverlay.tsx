@@ -1,4 +1,4 @@
-/** Fixed, subtle film-grain texture over the whole app — the one texture pass, per the design system. */
+/** Fixed, subtle film-grain texture over the whole app - the one texture pass, per the design system. */
 export function GrainOverlay() {
   return (
     <svg className="grain-overlay" aria-hidden focusable="false">

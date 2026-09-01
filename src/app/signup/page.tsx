@@ -42,12 +42,12 @@ export default function SignupPage() {
 
       <RevealOnMount>
         <div className="max-w-md lg:max-w-lg">
-          <p className="eyebrow">01 — New account</p>
+          <p className="eyebrow">01 - New account</p>
           <h1 className="mt-6 font-(family-name:--font-display) text-5xl italic leading-[0.95] text-(--color-text-primary) sm:text-6xl lg:text-7xl">
             Start with a <span className="text-(--color-accent-strong)">clean ledger.</span>
           </h1>
           <p className="mt-6 max-w-sm text-(--color-text-secondary)">
-            Set your income, define your caps, and let HardCap hold the line — every expense
+            Set your income, define your caps, and let HardCap hold the line - every expense
             reconciled the moment you log it.
           </p>
           <div className="hairline mt-10 hidden max-w-xs lg:block" />
@@ -56,7 +56,7 @@ export default function SignupPage() {
 
       <RevealOnMount delay={0.12}>
         <div className="neu-raised w-full max-w-sm p-6 sm:p-10">
-          <p className="eyebrow">02 — Create account</p>
+          <p className="eyebrow">02 - Create account</p>
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
             <NeuInput
               label="Email"

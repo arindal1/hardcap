@@ -35,12 +35,12 @@ export default function LoginPage() {
 
       <RevealOnMount>
         <div className="max-w-md lg:max-w-lg">
-          <p className="eyebrow">01 — Access</p>
+          <p className="eyebrow">01 - Access</p>
           <h1 className="mt-6 font-(family-name:--font-display) text-5xl italic leading-[0.95] text-(--color-text-primary) sm:text-6xl lg:text-7xl">
             Know your <span className="text-(--color-accent-strong)">number.</span>
           </h1>
           <p className="mt-6 max-w-sm text-(--color-text-secondary)">
-            Hard spending caps, logged in seconds, tracked in real time. No drift, no spreadsheets —
+            Hard spending caps, logged in seconds, tracked in real time. No drift, no spreadsheets -
             just the balance that matters.
           </p>
           <div className="hairline mt-10 hidden max-w-xs lg:block" />
@@ -49,7 +49,7 @@ export default function LoginPage() {
 
       <RevealOnMount delay={0.12}>
         <div className="neu-raised w-full max-w-sm p-6 sm:p-10">
-          <p className="eyebrow">02 — Sign in</p>
+          <p className="eyebrow">02 - Sign in</p>
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
             <NeuInput
               label="Email"

@@ -1,6 +1,6 @@
 # HardCap
 
-Personal expense & budget tracker. Split a fixed monthly salary into hard-capped budget groups, log expenses in seconds, and see real-time remaining balance — per group and overall — with zero drift. Includes a separate lending ledger and an on-demand Gemini-powered spending insight report.
+Personal expense & budget tracker. Split a fixed monthly salary into hard-capped budget groups, log expenses in seconds, and see real-time remaining balance - per group and overall - with zero drift. Includes a separate lending ledger and an on-demand Gemini-powered spending insight report.
 
 Full product spec: [docs/PRD.md](docs/PRD.md). Architecture, API, and database docs: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/API.md](docs/API.md), [docs/DATABASE.md](docs/DATABASE.md).
 
@@ -49,4 +49,4 @@ Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 · NeonDB Postgres via Pr
 
 ## Deployment
 
-Designed to run on any Node-compatible host; no vendor-specific code. Vercel is the assumed target (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)) — set the same environment variables from `.env.example` in your hosting provider's dashboard.
+Designed to run on any Node-compatible host; no vendor-specific code. Vercel is the assumed target (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)) - set the same environment variables from `.env.example` in your hosting provider's dashboard.

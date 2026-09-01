@@ -9,7 +9,7 @@ if (typeof window !== "undefined") {
 }
 
 /**
- * Scroll-scrubbed reveal for below-the-fold sections — fades/lifts children
+ * Scroll-scrubbed reveal for below-the-fold sections - fades/lifts children
  * (optionally staggering direct children) as they enter the viewport.
  * Skips entirely under prefers-reduced-motion.
  */

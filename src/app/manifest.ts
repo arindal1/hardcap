@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "HardCap — Know your number",
+    name: "HardCap | Know your number",
     short_name: "HardCap",
     description: "Personal expense and budget tracker with hard spending caps and real-time balance.",
     start_url: "/",

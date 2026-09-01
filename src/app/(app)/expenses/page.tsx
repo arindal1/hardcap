@@ -118,7 +118,7 @@ export default function ExpensesPage() {
   return (
     <div className="flex flex-col gap-10">
       <section>
-        <p className="eyebrow">01 — Ledger</p>
+        <p className="eyebrow">01 - Ledger</p>
         <h1 className="mt-4 font-(family-name:--font-display) text-4xl italic text-(--color-text-primary) sm:text-5xl">
           Every dollar, logged.
         </h1>

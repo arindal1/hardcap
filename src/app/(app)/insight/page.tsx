@@ -31,7 +31,7 @@ export default function InsightPage() {
   return (
     <div className="flex flex-col gap-10">
       <section>
-        <p className="eyebrow">01 — Gemini insight</p>
+        <p className="eyebrow">01 - Gemini insight</p>
         <h1 className="mt-4 font-(family-name:--font-display) text-4xl italic text-(--color-text-primary) sm:text-5xl">
           Ask the ledger.
         </h1>
@@ -64,7 +64,7 @@ export default function InsightPage() {
 
       {history && history.length > 1 && (
         <ScrollReveal className="flex flex-col gap-4" stagger>
-          <p className="eyebrow">02 — History</p>
+          <p className="eyebrow">02 - History</p>
           {history.slice(1).map((snapshot) => (
             <div key={snapshot.id} className="neu-raised p-6">
               <p className="text-xs text-(--color-text-muted)">

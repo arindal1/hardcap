@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  // Separate, tighter per-email limit — the 409 duplicate-email response
+  // Separate, tighter per-email limit - the 409 duplicate-email response
   // below is an inherent enumeration signal (unavoidable without switching
   // to an email-verification flow), so cap attempts against any single
   // email address independent of which IP they come from.

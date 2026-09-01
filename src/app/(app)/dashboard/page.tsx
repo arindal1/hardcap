@@ -72,7 +72,7 @@ export default function DashboardPage() {
 
       <RevealOnMount>
         <section className="neu-raised p-6 sm:p-10">
-          <p className="eyebrow">01 — Overall remaining</p>
+          <p className="eyebrow">01 - Overall remaining</p>
           <p
             className={`tabular mt-6 break-words font-(family-name:--font-display) text-4xl italic leading-none sm:text-6xl lg:text-8xl ${
               data.overallRemaining < 0 ? "text-(--color-danger)" : "text-(--color-accent-strong)"
@@ -117,7 +117,7 @@ export default function DashboardPage() {
       </RevealOnMount>
 
       <section className="flex flex-col gap-5">
-        <p className="eyebrow">02 — Groups at a glance</p>
+        <p className="eyebrow">02 - Groups at a glance</p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {data.groups.map((group, i) => (
             <RevealOnMount key={group.id} delay={i * 0.05}>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
       </section>
 
       <ScrollReveal className="flex flex-col gap-5" stagger>
-        <p className="eyebrow">03 — Charts</p>
+        <p className="eyebrow">03 - Charts</p>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <SpendVsBudgetChart groups={data.groups} />
           <SpendOverTimeChart data={dailySeries} />

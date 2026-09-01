@@ -1,4 +1,4 @@
-# HardCap — Architecture
+# HardCap - Architecture
 
 ## Stack
 
@@ -8,7 +8,7 @@
 - NextAuth v5 beta + `@auth/prisma-adapter`, JWT sessions. Credentials (bcrypt) + Google OAuth.
 - Zod for all API input validation.
 - TanStack Query + a typed fetch wrapper for client data (no direct `fetch` in components).
-- GSAP / Framer Motion / react-three-fiber for motion — dashboard hero and login only.
+- GSAP / Framer Motion / react-three-fiber for motion - dashboard hero and login only.
 
 ## Layering
 
@@ -28,14 +28,14 @@ flowchart TD
 
 - **Route handlers** (`src/app/api/**/route.ts`) stay thin: authenticate, parse with Zod, delegate to a service function, return typed JSON. No business logic, no direct Prisma writes for anything with a service equivalent.
 - **Service layer** (`src/lib/services/*.ts`) owns business logic, ownership checks, and Prisma queries. One file per domain: `groups.ts`, `expenses.ts`, `lending.ts`, `insight.ts`.
-- **Pure logic** (`src/lib/budget.ts`) has no framework or DB imports — balance math only, independently unit-testable.
+- **Pure logic** (`src/lib/budget.ts`) has no framework or DB imports - balance math only, independently unit-testable.
 - **Client layer**: components never call `fetch` directly. They call a `lib/queries.ts` hook, which calls `lib/api-client.ts`, which calls the route handler.
 
 ## Auth
 
 - `src/lib/auth.ts` configures NextAuth: Credentials provider (email + bcrypt-hashed password against `User.passwordHash`) and Google OAuth, JWT session strategy, `PrismaAdapter` for account/session persistence.
-- `src/middleware.ts` gates every route except `/login`, `/signup`, `/api/auth/*`, and `/` — unauthenticated requests are redirected to `/login`.
-- Every route handler independently re-checks `session?.user?.id` before touching data — middleware is a UX convenience, not the sole authorization boundary.
+- `src/middleware.ts` gates every route except `/login`, `/signup`, `/api/auth/*`, and `/` - unauthenticated requests are redirected to `/login`.
+- Every route handler independently re-checks `session?.user?.id` before touching data - middleware is a UX convenience, not the sole authorization boundary.
 
 ## Ownership enforcement (mandatory pattern)
 
@@ -52,26 +52,26 @@ before any `update`/`delete`. A client-supplied ID is never trusted alone. See `
 
 Centralized in `src/lib/budget.ts` (pure, framework-free):
 
-- `computeGroupBalance(cap, spent)` — remaining, over-cap flag, overage amount for one group.
-- `computeOverallRemaining(monthlyIncome, totalSpent)` — overall balance across all groups.
-- `computeUnallocatedIncome(monthlyIncome, totalCaps)` — income not yet assigned to any group cap.
+- `computeGroupBalance(cap, spent)` - remaining, over-cap flag, overage amount for one group.
+- `computeOverallRemaining(monthlyIncome, totalSpent)` - overall balance across all groups.
+- `computeUnallocatedIncome(monthlyIncome, totalCaps)` - income not yet assigned to any group cap.
 
-Spend totals are always computed live from `Expense` rows grouped by month (`prisma.expense.groupBy`), never cached/denormalized — this is what guarantees zero drift between logged expenses and displayed balances (PRD primary goal). `BudgetPeriod` exists only to preserve each month's historical cap when a group's current cap changes; it is not used for balance math on the current month.
+Spend totals are always computed live from `Expense` rows grouped by month (`prisma.expense.groupBy`), never cached/denormalized - this is what guarantees zero drift between logged expenses and displayed balances (PRD primary goal). `BudgetPeriod` exists only to preserve each month's historical cap when a group's current cap changes; it is not used for balance math on the current month.
 
 ## AI insight flow
 
 `src/lib/services/insight.ts`:
 1. Reject if the user's last `AIInsightRequestSnapshot` was created < 60s ago (`InsightCooldownError`, mapped to HTTP 429).
 2. Assemble current-month income, per-group cap/spent/remaining, overall remaining, and days left in month.
-3. Call `requestGeminiInsight()` (`src/lib/gemini.ts`) — server-side only, `GEMINI_API_KEY` never reaches the client.
-4. Persist an `AIInsightRequestSnapshot` **only on a successful Gemini response** — a failed call leaves no snapshot and does not consume the cooldown window incorrectly (the cooldown is keyed off the last successful snapshot).
+3. Call `requestGeminiInsight()` (`src/lib/gemini.ts`) - server-side only, `GEMINI_API_KEY` never reaches the client.
+4. Persist an `AIInsightRequestSnapshot` **only on a successful Gemini response** - a failed call leaves no snapshot and does not consume the cooldown window incorrectly (the cooldown is keyed off the last successful snapshot).
 
 ## Design system constraint
 
-Dark, luxury neumorphism is a fixed PRD requirement. All surfaces use `.neu-raised` / `.neu-inset` / `.neu-pressable` utilities and CSS variables in `src/app/globals.css` — no ad-hoc shadows/borders. Every motion component must check `prefers-reduced-motion` and no-op if set (see `AmbientField.tsx`, `RevealOnMount.tsx`).
+Dark, luxury neumorphism is a fixed PRD requirement. All surfaces use `.neu-raised` / `.neu-inset` / `.neu-pressable` utilities and CSS variables in `src/app/globals.css` - no ad-hoc shadows/borders. Every motion component must check `prefers-reduced-motion` and no-op if set (see `AmbientField.tsx`, `RevealOnMount.tsx`).
 
 ## Known architectural decisions
 
 - Google is the OAuth provider (PRD left this open).
-- `insight` and `insight/history` are separate route files, matching the PRD's exact endpoint contract — do not merge.
+- `insight` and `insight/history` are separate route files, matching the PRD's exact endpoint contract - do not merge.
 - Hosting target assumed Vercel; no vendor-lock-in code written either way.
