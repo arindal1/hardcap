@@ -17,7 +17,7 @@ export const NeuSelect = forwardRef<HTMLSelectElement, NeuSelectProps>(
         <select
           ref={ref}
           id={selectId}
-          className={`neu-inset focus-ring w-full px-4 py-3 text-(--color-text-primary) bg-transparent outline-none ${className}`}
+          className={`neu-inset focus-ring w-full py-3 pl-4 pr-11 text-(--color-text-primary) bg-transparent outline-none ${className}`}
           {...props}
         >
           {children}

@@ -31,7 +31,7 @@
   --ease-snap: cubic-bezier(0.65, 0, 0.35, 1);
 
   --font-display: var(--font-fraunces);
-  --font-body: var(--font-geist-sans);
+  --font-body: var(--font-plus-jakarta);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -148,6 +148,54 @@ body {
 .tabular {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
+}
+
+/*
+ * Native form-control chrome (number steppers, select arrow/popup, date &
+ * time picker icons) defaults to OS light-theme rendering and is invisible
+ * or jarring against the dark surfaces — restyled to sit inside them.
+ */
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: auto;
+  -webkit-appearance: auto;
+  opacity: 1;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  filter: invert(74%) sepia(23%) saturate(462%) hue-rotate(358deg) brightness(96%) contrast(92%);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23d8b673' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.7rem;
+  padding-right: 2.75rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
+  filter: invert(74%) sepia(23%) saturate(462%) hue-rotate(358deg) brightness(96%) contrast(92%);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 /* Neumorphic surface primitives. Applied deliberately, not globally. */
