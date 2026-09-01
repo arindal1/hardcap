@@ -6,16 +6,20 @@ import NextAuth from "next-auth";
 import { prisma } from "@/lib/db";
 import { loginSchema } from "@/lib/schemas";
 import { isRateLimited } from "@/lib/rate-limit";
+import { authConfig } from "@/lib/auth.config";
 
 // Fixed dummy hash to compare against when no user is found, so a
 // nonexistent-email login takes the same code path (and roughly the same
-// time) as a wrong-password login - prevents timing-based user enumeration.
+// time) as a wrong-password login — prevents timing-based user enumeration.
 const DUMMY_HASH = "$2b$12$CwaJqUV1V1V1V1V1V1V1VOQe6X8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  pages: { signIn: "/login" },
+  // Render (and most PaaS) terminate TLS at a reverse proxy and forward
+  // requests over plain HTTP with X-Forwarded-* headers. Without this,
+  // NextAuth can't reliably determine the origin from a device that isn't
+  // already holding a previously-issued cookie, breaking fresh sign-ins.
   trustHost: true,
   providers: [
     Google({

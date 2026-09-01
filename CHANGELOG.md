@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.3]
+
+### Fixed
+- `src/middleware.ts`/`src/lib/auth.ts`: login/signup failed on every device except the one holding a stale cached session — middleware runs on the Edge runtime and imported the full `auth.ts`, which pulls in `PrismaAdapter`/`bcryptjs` (both Node-only), crashing middleware on Render for every request and breaking the CSP nonce. Split into `src/lib/auth.config.ts` (Edge-safe: session strategy, pages, jwt/session callbacks) used by middleware, and the full Node-only config in `auth.ts` (adapter, providers) used by API routes. Also added `trustHost: true` to `auth.ts` for correct origin detection behind Render's reverse proxy.
+
 
 ## [0.3.2]
 
