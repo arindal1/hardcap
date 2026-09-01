@@ -22,7 +22,7 @@ if (!globalForPrisma.prismaKeepAlive) {
   const interval = setInterval(
     () => {
       prisma.$queryRaw`SELECT 1`.catch(() => {
-        // Best-effort keep-alive — a failed ping isn't actionable here.
+        // Best-effort keep-alive - a failed ping isn't actionable here.
       });
     },
     5 * 60 * 1000,

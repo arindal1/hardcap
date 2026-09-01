@@ -20,15 +20,15 @@ const fraunces = Fraunces({
 });
 
 const siteUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-const title = "HardCap — Know your number";
+const title = "HardCap | Know your number";
 const description =
-  "HardCap is a personal expense and budget tracker: set hard spending caps per category, log expenses in seconds, and see your real-time remaining balance — no drift, no spreadsheets.";
+  "HardCap is a personal expense and budget tracker: set hard spending caps per category, log expenses in seconds, and see your real-time remaining balance - no drift, no spreadsheets.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: title,
-    template: "%s — HardCap",
+    template: "%s - HardCap",
   },
   description,
   keywords: [
@@ -38,6 +38,8 @@ export const metadata: Metadata = {
     "spending caps",
     "monthly budget planner",
     "money lending tracker",
+    "arindal",
+    "arindal char"
   ],
   authors: [{ name: "HardCap" }],
   robots: {
@@ -52,7 +54,7 @@ export const metadata: Metadata = {
     siteName: "HardCap",
     title,
     description,
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "HardCap — Know your number" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "HardCap - Know your number" }],
   },
   twitter: {
     card: "summary_large_image",
