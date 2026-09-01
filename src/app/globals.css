@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/*
+ * HardCap design tokens — dark luxury neumorphism.
+ * Palette: warm charcoal base + champagne-gold accent.
+ * Neumorphic depth comes from a paired light/dark shadow on a
+ * near-flat surface color, not from borders or drop-shadow defaults.
+ */
+:root {
+  --color-canvas: #121216;
+  --color-surface: #17171d;
+  --color-surface-raised: #1b1b22;
+  --color-surface-inset: #101014;
+
+  --color-text-primary: #f2efe9;
+  --color-text-secondary: #a8a6ad;
+  --color-text-muted: #6f6d76;
+
+  --color-accent: #d8b673;
+  --color-accent-strong: #e8ca8f;
+  --color-danger: #e2685f;
+  --color-success: #6fbf9a;
+
+  --shadow-light: rgba(255, 255, 255, 0.045);
+  --shadow-dark: rgba(0, 0, 0, 0.65);
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-geist-sans);
+}
+
+@theme inline {
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-inset: var(--color-surface-inset);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-strong: var(--color-accent-strong);
+  --color-danger: var(--color-danger);
+  --color-success: var(--color-success);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+}
+
+/* Neumorphic surface primitives. Applied deliberately, not globally. */
+.neu-raised {
+  background: var(--color-surface);
+  border-radius: 1.25rem;
+  box-shadow:
+    8px 8px 18px var(--shadow-dark),
+    -6px -6px 14px var(--shadow-light);
+}
+
+.neu-inset {
+  background: var(--color-surface-inset);
+  border-radius: 1rem;
+  box-shadow:
+    inset 4px 4px 10px var(--shadow-dark),
+    inset -3px -3px 8px var(--shadow-light);
+}
+
+.neu-pressable {
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.neu-pressable:active {
+  box-shadow:
+    inset 3px 3px 8px var(--shadow-dark),
+    inset -2px -2px 6px var(--shadow-light);
+  transform: translateY(1px);
+}
+
+/* Focus ring distinct from neumorphic shadow, for accessibility (WCAG AA). */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

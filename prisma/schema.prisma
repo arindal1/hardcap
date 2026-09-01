@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  credentials
+  google
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String?
+  authProvider  AuthProvider @default(credentials)
+  monthlyIncome Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  groups        ExpenseGroup[]
+  expenses      Expense[]
+  lendingEntries LendingEntry[]
+  insightSnapshots AIInsightRequestSnapshot[]
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+// NextAuth Credentials + OAuth account linking
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model ExpenseGroup {
+  id         String   @id @default(uuid())
+  userId     String
+  name       String
+  budgetCap  Decimal  @db.Decimal(12, 2)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periods  BudgetPeriod[]
+  expenses Expense[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("expense_groups")
+}
+
+// Preserves each month's cap independently so editing a group's current cap
+// doesn't rewrite historical months' budget figures.
+model BudgetPeriod {
+  id        String   @id @default(uuid())
+  userId    String
+  groupId   String
+  month     String // "YYYY-MM"
+  budgetCap Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, month])
+  @@index([userId, month])
+  @@map("budget_periods")
+}
+
+model Expense {
+  id        String   @id @default(uuid())
+  userId    String
+  groupId   String
+  amount    Decimal  @db.Decimal(12, 2)
+  note      String?
+  spentAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([userId, groupId, spentAt])
+  @@index([userId, spentAt])
+  @@map("expenses")
+}
+
+model LendingEntry {
+  id         String    @id @default(uuid())
+  userId     String
+  personName String
+  amount     Decimal   @db.Decimal(12, 2)
+  reason     String?
+  date       DateTime
+  isSettled  Boolean   @default(false)
+  settledAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("lending_entries")
+}
+
+model AIInsightRequestSnapshot {
+  id           String   @id @default(uuid())
+  userId       String
+  month        String // "YYYY-MM"
+  requestedAt  DateTime @default(now())
+  inputSummary Json
+  responseText String   @db.Text
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, month])
+  @@map("ai_insight_snapshots")
+}
