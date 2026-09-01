@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDashboardSummary, useExpenses } from "@/lib/queries";
 import { apiFetch } from "@/lib/api-client";
 import { RevealOnMount } from "@/components/RevealOnMount";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { AmbientField } from "@/components/AmbientField";
 import { NeuInput } from "@/components/NeuInput";
 import { NeuButton } from "@/components/NeuButton";
@@ -66,26 +67,28 @@ export default function DashboardPage() {
   if (error || !data) return <p className="text-(--color-danger)">Failed to load dashboard.</p>;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <AmbientField />
+
       <RevealOnMount>
-        <section className="neu-raised p-5 sm:p-8">
-          <p className="text-sm text-(--color-text-secondary)">Overall remaining</p>
+        <section className="neu-raised p-6 sm:p-10">
+          <p className="eyebrow">01 — Overall remaining</p>
           <p
-            className={`mt-2 font-(family-name:--font-display) text-4xl italic sm:text-5xl ${
+            className={`tabular mt-6 font-(family-name:--font-display) text-6xl italic leading-none sm:text-7xl lg:text-8xl ${
               data.overallRemaining < 0 ? "text-(--color-danger)" : "text-(--color-accent-strong)"
             }`}
           >
             {currency(data.overallRemaining)}
           </p>
-          <p className="mt-2 text-sm text-(--color-text-muted)">
+          <div className="hairline my-6 max-w-xs" />
+          <p className="text-sm text-(--color-text-secondary)">
             {currency(data.totalSpent)} spent of {currency(data.monthlyIncome)} income
           </p>
           <p className="mt-1 text-xs text-(--color-text-muted)">
             Unallocated income: {currency(data.unallocatedIncome)}
           </p>
           {editingIncome ? (
-            <form onSubmit={handleIncomeSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <form onSubmit={handleIncomeSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="w-full sm:w-40">
                 <NeuInput
                   label="Monthly income"
@@ -105,7 +108,7 @@ export default function DashboardPage() {
           ) : (
             <button
               onClick={() => setEditingIncome(true)}
-              className="focus-ring mt-3 text-xs text-(--color-text-muted) hover:text-(--color-accent)"
+              className="focus-ring mt-4 text-xs text-(--color-text-muted) hover:text-(--color-accent)"
             >
               Update income
             </button>
@@ -113,46 +116,54 @@ export default function DashboardPage() {
         </section>
       </RevealOnMount>
 
-      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {data.groups.map((group, i) => (
-          <RevealOnMount key={group.id} delay={i * 0.05}>
-            <div className="neu-raised p-6">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="truncate font-medium">{group.name}</h3>
-                {group.isOverCap && (
-                  <span className="shrink-0 text-xs text-(--color-danger)">
-                    Over by {currency(group.overageAmount)}
-                  </span>
-                )}
+      <section className="flex flex-col gap-5">
+        <p className="eyebrow">02 — Groups at a glance</p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {data.groups.map((group, i) => (
+            <RevealOnMount key={group.id} delay={i * 0.05}>
+              <div className="neu-raised neu-pressable p-6 transition-transform duration-300 hover:-translate-y-1">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="truncate font-medium">{group.name}</h3>
+                  {group.isOverCap && (
+                    <span className="shrink-0 text-xs text-(--color-danger)">
+                      Over by {currency(group.overageAmount)}
+                    </span>
+                  )}
+                </div>
+                <p
+                  className={`tabular mt-3 text-3xl ${
+                    group.isOverCap ? "text-(--color-danger)" : "text-(--color-text-primary)"
+                  }`}
+                >
+                  {currency(group.remaining)}
+                </p>
+                <p className="mt-1 text-xs text-(--color-text-muted)">
+                  {currency(group.spent)} of {currency(group.cap)} cap
+                </p>
+                <div className="neu-inset mt-4 h-2 w-full overflow-hidden">
+                  <div
+                    className={`h-full transition-[width] duration-500 ease-out ${
+                      group.isOverCap ? "bg-(--color-danger)" : "bg-(--color-accent)"
+                    }`}
+                    style={{ width: `${Math.min(100, (group.spent / group.cap) * 100)}%` }}
+                  />
+                </div>
               </div>
-              <p
-                className={`mt-3 text-2xl ${
-                  group.isOverCap ? "text-(--color-danger)" : "text-(--color-text-primary)"
-                }`}
-              >
-                {currency(group.remaining)}
-              </p>
-              <p className="mt-1 text-xs text-(--color-text-muted)">
-                {currency(group.spent)} of {currency(group.cap)} cap
-              </p>
-              <div className="neu-inset mt-4 h-2 w-full overflow-hidden">
-                <div
-                  className={`h-full ${group.isOverCap ? "bg-(--color-danger)" : "bg-(--color-accent)"}`}
-                  style={{ width: `${Math.min(100, (group.spent / group.cap) * 100)}%` }}
-                />
-              </div>
-            </div>
-          </RevealOnMount>
-        ))}
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SpendVsBudgetChart groups={data.groups} />
-        <SpendOverTimeChart data={dailySeries} />
-        <div className="lg:col-span-2">
-          <OverallBalanceTrendChart data={dailySeries} />
+            </RevealOnMount>
+          ))}
         </div>
       </section>
+
+      <ScrollReveal className="flex flex-col gap-5" stagger>
+        <p className="eyebrow">03 — Charts</p>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SpendVsBudgetChart groups={data.groups} />
+          <SpendOverTimeChart data={dailySeries} />
+          <div className="lg:col-span-2">
+            <OverallBalanceTrendChart data={dailySeries} />
+          </div>
+        </div>
+      </ScrollReveal>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 // Runs once on server boot (Next.js instrumentation hook). Self-pings
 // `/api/health` every 10 minutes to stop an already-awake Render free-tier
 // instance from spinning down after its 15-minute idle window. This cannot
-// wake an instance that has already gone to sleep - it only prevents the
+// wake an instance that has already gone to sleep — it only prevents the
 // idle timer from ever expiring while the process is running.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
@@ -14,7 +14,7 @@ export async function register() {
   const interval = setInterval(
     () => {
       fetch(healthUrl).catch(() => {
-        // Best-effort keep-alive - a failed self-ping isn't actionable here.
+        // Best-effort keep-alive — a failed self-ping isn't actionable here.
       });
     },
     10 * 60 * 1000,

@@ -6,6 +6,7 @@ import { useLending } from "@/lib/queries";
 import { apiFetch } from "@/lib/api-client";
 import { NeuInput } from "@/components/NeuInput";
 import { NeuButton } from "@/components/NeuButton";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function LendingPage() {
   const { data: entries, isLoading } = useLending();
@@ -48,7 +49,14 @@ export default function LendingPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
+      <section>
+        <p className="eyebrow">01 — Lending ledger</p>
+        <h1 className="mt-4 font-(family-name:--font-display) text-4xl italic text-(--color-text-primary) sm:text-5xl">
+          Who owes what.
+        </h1>
+      </section>
+
       <form onSubmit={handleSubmit} className="neu-raised flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:p-6">
         <div className="w-full sm:min-w-[160px]">
           <NeuInput label="Name" value={personName} onChange={(e) => setPersonName(e.target.value)} required />
@@ -80,12 +88,12 @@ export default function LendingPage() {
         <p className="text-(--color-text-muted)">Loading…</p>
       ) : (
         <>
-        <div className="flex flex-col gap-4 md:hidden">
+        <ScrollReveal className="flex flex-col gap-4 md:hidden" stagger>
           {entries?.map((entry) => (
-            <div key={entry.id} className="neu-raised flex flex-col gap-2 p-4">
+            <div key={entry.id} className="neu-raised neu-pressable flex flex-col gap-2 p-4 transition-transform duration-300 hover:-translate-y-1">
               <div className="flex items-start justify-between gap-3">
                 <p className="truncate font-medium">{entry.personName}</p>
-                <p className="shrink-0 text-lg">{Number(entry.amount).toLocaleString()}</p>
+                <p className="tabular shrink-0 text-lg">{Number(entry.amount).toLocaleString()}</p>
               </div>
               <p className="text-xs text-(--color-text-muted)">{new Date(entry.date).toLocaleDateString()}</p>
               {entry.reason && <p className="text-sm text-(--color-text-secondary)">{entry.reason}</p>}
@@ -99,7 +107,7 @@ export default function LendingPage() {
               </button>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
         <div className="neu-raised hidden overflow-x-auto md:block">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="text-(--color-text-muted)">
@@ -115,7 +123,7 @@ export default function LendingPage() {
               {entries?.map((entry) => (
                 <tr key={entry.id} className="border-t border-white/5">
                   <td className="px-6 py-3">{entry.personName}</td>
-                  <td className="px-6 py-3">{Number(entry.amount).toLocaleString()}</td>
+                  <td className="tabular px-6 py-3">{Number(entry.amount).toLocaleString()}</td>
                   <td className="px-6 py-3">{new Date(entry.date).toLocaleDateString()}</td>
                   <td className="px-6 py-3 text-(--color-text-muted)">{entry.reason}</td>
                   <td className="px-6 py-3">

@@ -6,6 +6,7 @@ import { useDashboardSummary, useGroups } from "@/lib/queries";
 import { apiFetch } from "@/lib/api-client";
 import { NeuInput } from "@/components/NeuInput";
 import { NeuButton } from "@/components/NeuButton";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 function currency(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
@@ -67,12 +68,19 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      {summary && (
-        <p className="text-sm text-(--color-text-muted)">
-          Unallocated income: {currency(summary.unallocatedIncome)}
-        </p>
-      )}
+    <div className="flex flex-col gap-10">
+      <section>
+        <p className="eyebrow">01 — Budget groups</p>
+        <h1 className="mt-4 font-(family-name:--font-display) text-4xl italic text-(--color-text-primary) sm:text-5xl">
+          Where the caps live.
+        </h1>
+        {summary && (
+          <p className="mt-3 text-sm text-(--color-text-muted)">
+            Unallocated income: {currency(summary.unallocatedIncome)}
+          </p>
+        )}
+      </section>
+
       <form onSubmit={handleCreate} className="neu-raised flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:p-6">
         <div className="w-full sm:min-w-[200px] sm:flex-1">
           <NeuInput label="Group name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -97,7 +105,7 @@ export default function GroupsPage() {
       {isLoading ? (
         <p className="text-(--color-text-muted)">Loading…</p>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" stagger>
           {groups?.map((group) =>
             editingId === group.id ? (
               <div key={group.id} className="neu-raised flex flex-col gap-3 p-6">
@@ -120,7 +128,7 @@ export default function GroupsPage() {
                 </div>
               </div>
             ) : (
-              <div key={group.id} className="neu-raised flex flex-col gap-2 p-6">
+              <div key={group.id} className="neu-raised neu-pressable flex flex-col gap-2 p-6 transition-transform duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="truncate font-medium">{group.name}</h3>
                   <div className="flex shrink-0 gap-3">
@@ -138,13 +146,13 @@ export default function GroupsPage() {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-(--color-text-secondary)">
+                <p className="tabular text-sm text-(--color-text-secondary)">
                   Cap: {group.cap.toLocaleString()} · Remaining: {group.remaining.toLocaleString()}
                 </p>
               </div>
             )
           )}
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );

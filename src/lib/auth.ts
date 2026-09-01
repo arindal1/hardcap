@@ -9,7 +9,7 @@ import { isRateLimited } from "@/lib/rate-limit";
 
 // Fixed dummy hash to compare against when no user is found, so a
 // nonexistent-email login takes the same code path (and roughly the same
-// time) as a wrong-password login - prevents timing-based user enumeration.
+// time) as a wrong-password login — prevents timing-based user enumeration.
 const DUMMY_HASH = "$2b$12$CwaJqUV1V1V1V1V1V1V1VOQe6X8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

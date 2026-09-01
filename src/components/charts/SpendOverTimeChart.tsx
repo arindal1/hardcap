@@ -11,7 +11,7 @@ export interface DailyPoint {
 export function SpendOverTimeChart({ data }: { data: DailyPoint[] }) {
   return (
     <div className="neu-raised p-6">
-      <h3 className="mb-4 text-sm text-(--color-text-secondary)">Spend over time</h3>
+      <p className="eyebrow mb-6">Spend over time</p>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />

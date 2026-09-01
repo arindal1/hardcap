@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Content-Security-Policy is intentionally NOT set here - it needs a
+// Content-Security-Policy is intentionally NOT set here — it needs a
 // per-request nonce for script-src/style-src, which requires a value
 // generated per-request. That's handled in src/middleware.ts instead;
 // setting a second, static CSP header here would make browsers enforce the

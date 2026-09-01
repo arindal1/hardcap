@@ -1,88 +1,109 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { motion } from "framer-motion";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/groups", label: "Groups" },
-  { href: "/expenses", label: "Expenses" },
-  { href: "/lending", label: "Lending" },
-  { href: "/insight", label: "Insight" },
+  { href: "/dashboard", label: "Dashboard", glyph: "01" },
+  { href: "/groups", label: "Groups", glyph: "02" },
+  { href: "/expenses", label: "Expenses", glyph: "03" },
+  { href: "/lending", label: "Lending", glyph: "04" },
+  { href: "/insight", label: "Insight", glyph: "05" },
 ];
 
+/** Desktop: floating pill nav with a sliding active indicator. Mobile: fixed bottom tab bar (see BottomNav). */
 export function NavBar() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
 
   return (
-    <nav className="neu-raised mx-3 mt-3 px-4 py-3 sm:mx-6 sm:mt-6 sm:px-6 sm:py-4">
-      <div className="flex items-center justify-between">
-        <span className="font-(family-name:--font-display) text-xl italic text-(--color-accent-strong)">
-          HardCap
-        </span>
-        <div className="hidden items-center gap-6 text-sm md:flex">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={
-                pathname === link.href
-                  ? "text-(--color-accent-strong)"
-                  : "text-(--color-text-secondary) hover:text-(--color-text-primary)"
-              }
-            >
-              {link.label}
-            </Link>
-          ))}
+    <>
+      <nav className="fixed inset-x-0 top-0 z-40 hidden justify-center px-6 pt-6 md:flex">
+        <div className="neu-raised flex items-center gap-1 px-2 py-2">
+          <Link
+            href="/dashboard"
+            className="focus-ring mr-2 px-3 font-(family-name:--font-display) text-lg italic text-(--color-accent-strong)"
+          >
+            HardCap
+          </Link>
+          {links.map((link) => {
+            const active = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="focus-ring relative px-4 py-2 text-sm"
+                data-cursor="link"
+              >
+                {active && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="neu-inset absolute inset-0"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span
+                  className={`relative z-10 ${
+                    active ? "text-(--color-accent-strong)" : "text-(--color-text-secondary) hover:text-(--color-text-primary)"
+                  }`}
+                >
+                  {link.label}
+                </span>
+              </Link>
+            );
+          })}
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="focus-ring text-sm text-(--color-text-muted) hover:text-(--color-danger)"
+            className="focus-ring ml-2 px-4 py-2 text-sm text-(--color-text-muted) hover:text-(--color-danger)"
           >
             Log out
           </button>
         </div>
-        <button
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          className="focus-ring -mr-2 flex h-11 w-11 flex-col items-center justify-center gap-1.5 md:hidden"
-        >
-          <span
-            className={`h-0.5 w-5 bg-(--color-text-secondary) transition-transform ${open ? "translate-y-2 rotate-45" : ""}`}
-          />
-          <span className={`h-0.5 w-5 bg-(--color-text-secondary) transition-opacity ${open ? "opacity-0" : ""}`} />
-          <span
-            className={`h-0.5 w-5 bg-(--color-text-secondary) transition-transform ${open ? "-translate-y-2 -rotate-45" : ""}`}
-          />
-        </button>
+      </nav>
+      <BottomNav pathname={pathname} />
+    </>
+  );
+}
+
+function BottomNav({ pathname }: { pathname: string }) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
+      <div className="neu-raised flex w-full max-w-md items-center justify-between px-2 py-2">
+        {links.map((link) => {
+          const active = pathname === link.href;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="focus-ring relative flex flex-1 flex-col items-center gap-1 px-1 py-2"
+              aria-current={active ? "page" : undefined}
+            >
+              {active && (
+                <motion.span
+                  layoutId="nav-pill-mobile"
+                  className="neu-inset absolute inset-0"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span
+                className={`font-(family-name:--font-mono) relative z-10 text-[10px] tracking-[0.2em] ${
+                  active ? "text-(--color-accent-strong)" : "text-(--color-text-muted)"
+                }`}
+              >
+                {link.glyph}
+              </span>
+              <span
+                className={`relative z-10 text-[11px] ${
+                  active ? "text-(--color-accent-strong)" : "text-(--color-text-secondary)"
+                }`}
+              >
+                {link.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
-      {open && (
-        <div className="mt-4 flex flex-col gap-4 border-t border-white/5 pt-4 text-sm md:hidden">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className={
-                pathname === link.href
-                  ? "text-(--color-accent-strong)"
-                  : "text-(--color-text-secondary) hover:text-(--color-text-primary)"
-              }
-            >
-              {link.label}
-            </Link>
-          ))}
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="focus-ring text-left text-(--color-text-muted) hover:text-(--color-danger)"
-          >
-            Log out
-          </button>
-        </div>
-      )}
     </nav>
   );
 }

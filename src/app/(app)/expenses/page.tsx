@@ -5,7 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useExpenses, useGroups } from "@/lib/queries";
 import { apiFetch } from "@/lib/api-client";
 import { NeuInput } from "@/components/NeuInput";
+import { NeuSelect } from "@/components/NeuSelect";
 import { NeuButton } from "@/components/NeuButton";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 type SortKey = "spentAt" | "amount";
 
@@ -114,7 +116,14 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
+      <section>
+        <p className="eyebrow">01 — Ledger</p>
+        <h1 className="mt-4 font-(family-name:--font-display) text-4xl italic text-(--color-text-primary) sm:text-5xl">
+          Every dollar, logged.
+        </h1>
+      </section>
+
       <form onSubmit={handleSubmit} className="neu-raised flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:p-6">
         <div className="w-full sm:w-32">
           <NeuInput
@@ -128,14 +137,8 @@ export default function ExpensesPage() {
             autoFocus
           />
         </div>
-        <div className="flex min-w-[180px] flex-col gap-2">
-          <label className="text-sm text-(--color-text-secondary)">Group</label>
-          <select
-            value={groupId}
-            onChange={(e) => setGroupId(e.target.value)}
-            required
-            className="neu-inset focus-ring px-4 py-3 text-(--color-text-primary) bg-transparent outline-none"
-          >
+        <div className="min-w-[180px]">
+          <NeuSelect label="Group" value={groupId} onChange={(e) => setGroupId(e.target.value)} required>
             <option value="" disabled>
               Select group
             </option>
@@ -144,7 +147,7 @@ export default function ExpensesPage() {
                 {g.name}
               </option>
             ))}
-          </select>
+          </NeuSelect>
         </div>
         <div className="min-w-[200px] flex-1">
           <NeuInput label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
@@ -164,20 +167,15 @@ export default function ExpensesPage() {
       {error && <p className="text-sm text-(--color-danger)">{error}</p>}
 
       <div className="neu-raised flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:p-6">
-        <div className="flex flex-col gap-2 sm:min-w-[180px]">
-          <label className="text-sm text-(--color-text-secondary)">Filter by group</label>
-          <select
-            value={filterGroupId}
-            onChange={(e) => setFilterGroupId(e.target.value)}
-            className="neu-inset focus-ring px-4 py-3 text-(--color-text-primary) bg-transparent outline-none"
-          >
+        <div className="sm:min-w-[180px]">
+          <NeuSelect label="Filter by group" value={filterGroupId} onChange={(e) => setFilterGroupId(e.target.value)}>
             <option value="">All groups</option>
             {groups?.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
               </option>
             ))}
-          </select>
+          </NeuSelect>
         </div>
         <div className="w-full sm:w-44">
           <NeuInput label="From" type="date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
@@ -191,7 +189,7 @@ export default function ExpensesPage() {
         <p className="text-(--color-text-muted)">Loading…</p>
       ) : (
         <>
-        <div className="flex flex-col gap-4 md:hidden">
+        <ScrollReveal className="flex flex-col gap-4 md:hidden" stagger>
           {sortedExpenses?.map((expense) =>
             editingId === expense.id ? (
               <div key={expense.id} className="neu-raised flex flex-col gap-4 p-4">
@@ -203,20 +201,13 @@ export default function ExpensesPage() {
                   value={editAmount}
                   onChange={(e) => setEditAmount(e.target.value)}
                 />
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-(--color-text-secondary)">Group</label>
-                  <select
-                    value={editGroupId}
-                    onChange={(e) => setEditGroupId(e.target.value)}
-                    className="neu-inset focus-ring px-4 py-3 text-(--color-text-primary) bg-transparent outline-none"
-                  >
-                    {groups?.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <NeuSelect label="Group" value={editGroupId} onChange={(e) => setEditGroupId(e.target.value)}>
+                  {groups?.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </NeuSelect>
                 <NeuInput label="Note (optional)" value={editNote} onChange={(e) => setEditNote(e.target.value)} />
                 <div className="flex gap-3">
                   <NeuButton type="button" variant="accent" onClick={() => handleEditSave(expense.id)}>
@@ -228,9 +219,9 @@ export default function ExpensesPage() {
                 </div>
               </div>
             ) : (
-              <div key={expense.id} className="neu-raised flex flex-col gap-2 p-4">
+              <div key={expense.id} className="neu-raised neu-pressable flex flex-col gap-2 p-4 transition-transform duration-300 hover:-translate-y-1">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-lg">{Number(expense.amount).toLocaleString()}</p>
+                  <p className="tabular text-lg">{Number(expense.amount).toLocaleString()}</p>
                   <p className="shrink-0 text-xs text-(--color-text-muted)">
                     {new Date(expense.spentAt).toLocaleDateString()}
                   </p>
@@ -254,7 +245,7 @@ export default function ExpensesPage() {
               </div>
             )
           )}
-        </div>
+        </ScrollReveal>
         <div className="neu-raised hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="text-(--color-text-muted)">
@@ -290,19 +281,14 @@ export default function ExpensesPage() {
                             onChange={(e) => setEditAmount(e.target.value)}
                           />
                         </div>
-                        <div className="flex min-w-[180px] flex-col gap-2">
-                          <label className="text-sm text-(--color-text-secondary)">Group</label>
-                          <select
-                            value={editGroupId}
-                            onChange={(e) => setEditGroupId(e.target.value)}
-                            className="neu-inset focus-ring px-4 py-3 text-(--color-text-primary) bg-transparent outline-none"
-                          >
+                        <div className="min-w-[180px]">
+                          <NeuSelect label="Group" value={editGroupId} onChange={(e) => setEditGroupId(e.target.value)}>
                             {groups?.map((g) => (
                               <option key={g.id} value={g.id}>
                                 {g.name}
                               </option>
                             ))}
-                          </select>
+                          </NeuSelect>
                         </div>
                         <div className="min-w-[200px] flex-1">
                           <NeuInput
@@ -324,7 +310,7 @@ export default function ExpensesPage() {
                   <tr key={expense.id} className="border-t border-white/5">
                     <td className="px-6 py-3">{new Date(expense.spentAt).toLocaleDateString()}</td>
                     <td className="px-6 py-3">{expense.group?.name}</td>
-                    <td className="px-6 py-3">{Number(expense.amount).toLocaleString()}</td>
+                    <td className="tabular px-6 py-3">{Number(expense.amount).toLocaleString()}</td>
                     <td className="px-6 py-3 text-(--color-text-muted)">{expense.note}</td>
                     <td className="px-6 py-3 text-right">
                       <div className="flex justify-end gap-3">

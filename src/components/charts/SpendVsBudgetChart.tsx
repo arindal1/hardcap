@@ -8,7 +8,7 @@ export function SpendVsBudgetChart({ groups }: { groups: GroupWithBalance[] }) {
 
   return (
     <div className="neu-raised p-6">
-      <h3 className="mb-4 text-sm text-(--color-text-secondary)">Spend vs. budget</h3>
+      <p className="eyebrow mb-6">Spend vs. budget</p>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />

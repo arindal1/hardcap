@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
 /*
- * HardCap design tokens - dark luxury neumorphism.
+ * HardCap design tokens — dark luxury neumorphism.
  * Palette: warm charcoal base + champagne-gold accent.
  * Neumorphic depth comes from a paired light/dark shadow on a
  * near-flat surface color, not from borders or drop-shadow defaults.
+ * Editorial cadence (eyebrows, hairlines, oversized numerals) layered
+ * on top so the system reads as art-directed, not template-default.
  */
 :root {
   --color-canvas: #121216;
@@ -18,14 +20,19 @@
 
   --color-accent: #d8b673;
   --color-accent-strong: #e8ca8f;
+  --color-accent-rgb: 216, 182, 115;
   --color-danger: #e2685f;
   --color-success: #6fbf9a;
 
-  --shadow-light: rgba(255, 255, 255, 0.045);
-  --shadow-dark: rgba(0, 0, 0, 0.65);
+  --shadow-light: rgba(255, 255, 255, 0.05);
+  --shadow-dark: rgba(0, 0, 0, 0.7);
+
+  --ease-lux: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.65, 0, 0.35, 1);
 
   --font-display: var(--font-fraunces);
   --font-body: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 @theme inline {
@@ -42,21 +49,122 @@
   --color-success: var(--color-success);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  scrollbar-color: var(--color-accent) var(--color-surface-inset);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--color-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-body);
+  position: relative;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-canvas);
+}
+
+/* Custom scrollbar — thin gold rail on charcoal track. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-inset);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--color-accent), var(--color-accent-strong));
+  border-radius: 999px;
+  border: 2px solid var(--color-surface-inset);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-strong);
+}
+
+/* Custom cursor replaces the system arrow on fine-pointer (mouse/trackpad) devices only. */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"] {
+    cursor: none;
+  }
+}
+
+/* Fixed film-grain overlay — the single texture pass for the whole app. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+/* Custom cursor dot/ring — only meaningful on fine-pointer, motion-enabled devices. */
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .cursor-fx {
+    display: none;
+  }
+}
+
+/* Editorial furniture: numbered eyebrows + hairline rules used across every page header. */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: var(--color-accent);
+}
+
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(216, 182, 115, 0.35), rgba(255, 255, 255, 0.04) 60%);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Neumorphic surface primitives. Applied deliberately, not globally. */
 .neu-raised {
   background: var(--color-surface);
+  border-radius: 1.5rem;
+  box-shadow:
+    10px 10px 24px var(--shadow-dark),
+    -8px -8px 18px var(--shadow-light);
+}
+
+.neu-flat {
+  background: var(--color-surface);
   border-radius: 1.25rem;
   box-shadow:
-    8px 8px 18px var(--shadow-dark),
-    -6px -6px 14px var(--shadow-light);
+    4px 4px 10px var(--shadow-dark),
+    -3px -3px 8px var(--shadow-light);
 }
 
 .neu-inset {
@@ -68,7 +176,7 @@ body {
 }
 
 .neu-pressable {
-  transition: box-shadow 160ms ease, transform 160ms ease;
+  transition: box-shadow 220ms var(--ease-lux), transform 220ms var(--ease-lux);
 }
 
 .neu-pressable:active {

@@ -10,7 +10,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   return (
     <div className="flex min-h-dvh items-center justify-center px-4 sm:px-6">
       <div className="neu-raised max-w-md px-6 py-10 text-center sm:px-10 sm:py-12">
-        <h1 className="font-(family-name:--font-display) text-3xl italic text-(--color-accent-strong)">
+        <p className="eyebrow justify-center">Error</p>
+        <h1 className="mt-6 font-(family-name:--font-display) text-3xl italic text-(--color-accent-strong)">
           Something went wrong
         </h1>
         <p className="mt-2 text-sm text-(--color-text-secondary)">

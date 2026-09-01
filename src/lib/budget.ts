@@ -1,5 +1,5 @@
 /**
- * Pure balance math. No framework or DB imports - must stay independently
+ * Pure balance math. No framework or DB imports — must stay independently
  * unit-testable per ARCHITECTURE.md layering rule.
  */
 
