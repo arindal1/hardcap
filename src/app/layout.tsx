@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist_Mono, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -63,7 +64,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Reading the nonce middleware set on the request is what makes Next.js
+  // apply it to the inline scripts/styles it injects for hydration — without
+  // this read, the nonce in the CSP response header never matches anything
+  // in the rendered HTML and the browser blocks every inline script/style.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html
       lang="en"
