@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 // Middleware runs on the Edge runtime, which can't load the full auth.ts
 // (PrismaAdapter, bcryptjs). Build a separate, Edge-safe NextAuth instance
-// here from the shared authConfig — it's only used to decode the JWT
+// here from the shared authConfig - it's only used to decode the JWT
 // session cookie via req.auth, never to perform sign-in.
 const { auth } = NextAuth(authConfig);
 
@@ -50,18 +50,18 @@ export default auth((req) => {
   }
 
   // Already signed in: bounce away from the login/signup screens instead of
-  // showing them again (single sign-in UX — no re-auth once a session exists).
+  // showing them again (single sign-in UX - no re-auth once a session exists).
   if (req.auth && isPublic) {
     return withCsp(NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin)));
   }
 
   // Health checks must stay reachable unauthenticated (uptime monitors, the
-  // self-ping keep-alive in instrumentation.ts) — a redirect here would read
+  // self-ping keep-alive in instrumentation.ts) - a redirect here would read
   // as "unhealthy" to anything checking for a 200.
   if (isHealth) return next();
 
   if (!req.auth && !isPublic && !isApiAuth && pathname !== "/") {
-    // API routes must get a JSON 401, not an HTML redirect to /login — a
+    // API routes must get a JSON 401, not an HTML redirect to /login - a
     // redirected fetch() would resolve with a 200 HTML body and break every
     // JSON.parse() in api-client.ts. Route handlers already re-check the
     // session themselves (defense in depth), so this is purely about

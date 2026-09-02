@@ -13,6 +13,9 @@ export async function POST() {
     if (error instanceof InsightCooldownError) {
       return NextResponse.json({ error: error.message }, { status: 429 });
     }
+    // Log the real cause server-side (missing/invalid GEMINI_API_KEY, bad model
+    // name, upstream outage, etc.) - the client only ever sees a generic message.
+    console.error("Gemini insight request failed:", error);
     return NextResponse.json({ error: "Failed to generate insight" }, { status: 502 });
   }
 }

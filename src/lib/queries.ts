@@ -18,6 +18,17 @@ export function useGroups() {
   });
 }
 
+export function useArchivedGroups(enabled: boolean) {
+  return useQuery({
+    queryKey: ["groups", "archived"],
+    queryFn: () =>
+      apiFetch<{ data: { id: string; name: string; budgetCap: number }[] }>("/api/groups?archived=1").then(
+        (r) => r.data
+      ),
+    enabled,
+  });
+}
+
 export interface ExpenseFilters {
   groupId?: string;
   from?: string;

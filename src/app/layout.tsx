@@ -4,6 +4,7 @@ import { Geist_Mono, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { GrainOverlay } from "@/components/GrainOverlay";
+import { Footer } from "@/components/Footer";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -66,7 +67,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Reading the nonce middleware set on the request is what makes Next.js
-  // apply it to the inline scripts/styles it injects for hydration — without
+  // apply it to the inline scripts/styles it injects for hydration - without
   // this read, the nonce in the CSP response header never matches anything
   // in the rendered HTML and the browser blocks every inline script/style.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
@@ -79,6 +80,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <GrainOverlay />
         <Providers>{children}</Providers>
+        <Footer />
       </body>
     </html>
   );

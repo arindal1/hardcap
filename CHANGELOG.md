@@ -2,10 +2,42 @@
 
 All notable changes to this project are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.0]
+
+### Added
+- **Budget rollover**: groups can opt in (`ExpenseGroup.rolloverEnabled`) to carry an unspent cap surplus into the next month instead of resetting to zero. Carried amount is `max(0, previousMonthCap - previousMonthSpent)` (`computeRolloverAmount` in `src/lib/budget.ts`) - overspending never reduces next month's cap. Computed in `listGroupsWithBalances` (`src/lib/services/groups.ts`) from the prior month's `BudgetPeriod` cap and `Expense` total; `GroupWithBalance` now also exposes `baseCap` (the raw stored cap) alongside the rollover-inflated effective `cap`.
+- **Per-group color and icon**: `ExpenseGroup.color` (one of 7 curated theme-harmonic palette keys, `src/lib/group-style.ts`) and `ExpenseGroup.icon` (emoji glyph, user-selectable from a curated set) replace the single global gold accent for group cards, progress bars, and the dashboard's cap-vs-spent bar chart (`SpendVsBudgetChart`), so each group is visually distinct at a glance.
+- **Budget health grade**: an A-F letter grade (`computeBudgetHealthGrade` in `src/lib/budget.ts`) derived from the fraction of past completed group-months that went over their recorded cap (`computeBudgetHealth` in `src/lib/services/groups.ts`). Shown on the dashboard between the hero balance and the groups grid.
+- **Animated number counters**: dashboard hero balances (`AnimatedNumber` component) now tween from their previous to new value on change instead of snapping, respecting `prefers-reduced-motion`.
+- **Month-close celebration**: a zero-dependency canvas confetti burst plus a haptic vibration pulse (`src/lib/confetti.ts`) fires once per month, client-side only, the first time the dashboard loads after a month closes under budget (`didPreviousMonthCloseUnderBudget` in `src/lib/services/groups.ts`), gated by `localStorage` so it only shows once and skipped entirely under reduced-motion.
+- Unit tests for `computeRolloverAmount` and `computeBudgetHealthGrade` in `src/lib/budget.test.ts`.
+
+### Changed
+- Login and signup pages: the "What is HardCap?" blurb (added in 0.3.4) now renders below the sign-in/signup box in DOM order on every breakpoint (mobile: Heading → Box → About → Footer) instead of inline in the heading column. On desktop the heading and box are centered as a row and the box itself is wider (`lg:max-w-xl lg:p-14`, up from `max-w-sm`).
+- `createGroup`/`updateGroup` (`src/lib/services/groups.ts`) now take a single data object (`{ name, budgetCap, color?, icon?, rolloverEnabled? }`) instead of positional arguments, to accommodate the new optional fields without an unwieldy parameter list.
+
+## [0.3.4]
+
+### Added
+- Site-wide footer (`src/components/Footer.tsx`) linking to the author's GitHub (`arindal1`).
+- Expanded "What is HardCap?" blurb on the login and signup pages describing the app.
+- `POST /api/groups/[id]/restore` - un-archives a group (`src/lib/services/groups.ts#restoreGroup`), rejecting the restore with `409` if an active group has since taken the same name.
+- `GET /api/groups?archived=1` - lists the caller's archived groups so the UI can offer a restore action.
+- Groups page: "Show archived groups" panel with a Restore button per group; the create-group `409` conflict now offers a one-click "Restore archived group instead" action when the collision is with an archived group.
+- `DELETE /api/groups/[id]/permanent` - hard-deletes an **already-archived** group and cascades to its `Expense`/`BudgetPeriod` rows (`deleteGroupPermanently`). Only operates on archived groups, requiring archive-then-delete as two deliberate steps. Wired to a "Delete permanently" button (with a confirm dialog) in the Groups page's archived panel.
+
+### Changed
+- Displayed currency switched from USD (`$`) to INR (`₹`) on the dashboard and groups pages (`Intl.NumberFormat("en-IN", { currency: "INR" })`).
+
+### Fixed
+- Archiving a group previously made its name permanently unusable - the `(userId, name)` unique constraint includes archived rows, and there was no way to un-archive, so users had to pick a different name forever. Restore capability above closes this gap.
+- `GET /api/groups` and `GET /api/dashboard/summary` now explicitly set `export const dynamic = "force-dynamic"` so balance figures can never be served from a cached route response.
+- `POST /api/insight` now logs the real Gemini failure cause server-side (`console.error`) instead of only returning a generic 502 - makes a missing/invalid `GEMINI_API_KEY` or bad model name diagnosable.
+
 ## [0.3.3]
 
 ### Fixed
-- `src/middleware.ts`/`src/lib/auth.ts`: login/signup failed on every device except the one holding a stale cached session — middleware runs on the Edge runtime and imported the full `auth.ts`, which pulls in `PrismaAdapter`/`bcryptjs` (both Node-only), crashing middleware on Render for every request and breaking the CSP nonce. Split into `src/lib/auth.config.ts` (Edge-safe: session strategy, pages, jwt/session callbacks) used by middleware, and the full Node-only config in `auth.ts` (adapter, providers) used by API routes. Also added `trustHost: true` to `auth.ts` for correct origin detection behind Render's reverse proxy.
+- `src/middleware.ts`/`src/lib/auth.ts`: login/signup failed on every device except the one holding a stale cached session - middleware runs on the Edge runtime and imported the full `auth.ts`, which pulls in `PrismaAdapter`/`bcryptjs` (both Node-only), crashing middleware on Render for every request and breaking the CSP nonce. Split into `src/lib/auth.config.ts` (Edge-safe: session strategy, pages, jwt/session callbacks) used by middleware, and the full Node-only config in `auth.ts` (adapter, providers) used by API routes. Also added `trustHost: true` to `auth.ts` for correct origin detection behind Render's reverse proxy.
 
 
 ## [0.3.2]

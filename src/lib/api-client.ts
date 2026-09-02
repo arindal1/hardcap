@@ -1,3 +1,12 @@
+export class ApiError extends Error {
+  archivedGroupId?: string;
+
+  constructor(message: string, body: Record<string, unknown>) {
+    super(message);
+    this.archivedGroupId = typeof body.archivedGroupId === "string" ? body.archivedGroupId : undefined;
+  }
+}
+
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
@@ -6,7 +15,8 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.error?.formErrors?.[0] ?? body.error ?? `Request failed: ${response.status}`);
+    const message = body.error?.formErrors?.[0] ?? body.error ?? `Request failed: ${response.status}`;
+    throw new ApiError(message, body);
   }
 
   return response.json();

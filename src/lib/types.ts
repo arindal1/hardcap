@@ -1,7 +1,14 @@
+import type { BudgetHealthGrade } from "@/lib/budget";
+
 export type GroupWithBalance = {
   id: string;
   name: string;
   cap: number;
+  baseCap: number;
+  rolloverAmount: number;
+  rolloverEnabled: boolean;
+  color: string;
+  icon: string;
   spent: number;
   remaining: number;
   isOverCap: boolean;
@@ -27,12 +34,20 @@ export type LendingEntry = {
   settledAt: string | null;
 };
 
+export type BudgetHealth = {
+  grade: BudgetHealthGrade;
+  overageFrequency: number;
+  monthsConsidered: number;
+};
+
 export type DashboardSummary = {
   overallRemaining: number;
   monthlyIncome: number;
   totalSpent: number;
   unallocatedIncome: number;
   groups: GroupWithBalance[];
+  budgetHealth: BudgetHealth;
+  previousMonthClosedUnderBudget: boolean | null;
 };
 
 export type InsightSnapshot = {

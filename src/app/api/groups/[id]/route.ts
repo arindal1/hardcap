@@ -24,7 +24,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       },
     });
     if (existing) {
-      return NextResponse.json({ error: "Group name already exists" }, { status: 409 });
+      return NextResponse.json(
+        {
+          error: existing.isArchived
+            ? "An archived group with this name already exists - restore it instead of renaming to it"
+            : "Group name already exists",
+          archivedGroupId: existing.isArchived ? existing.id : undefined,
+        },
+        { status: 409 }
+      );
     }
   }
 

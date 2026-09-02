@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { computeOverallRemaining } from "@/lib/budget";
-import { listGroupsWithBalances, getUnallocatedIncome } from "@/lib/services/groups";
+import { computeBudgetHealthGrade, computeOverallRemaining } from "@/lib/budget";
+import {
+  computeBudgetHealth,
+  didPreviousMonthCloseUnderBudget,
+  listGroupsWithBalances,
+  getUnallocatedIncome,
+} from "@/lib/services/groups";
 import type { GroupWithBalance } from "@/lib/types";
+
+// Balance figures must never be served from a cached route response - always
+// recompute live from the DB (see ARCHITECTURE.md "Balance computation").
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await auth();
@@ -13,6 +22,8 @@ export async function GET() {
   const groups = await listGroupsWithBalances(session.user.id);
   const totalSpent = groups.reduce((sum: number, g: GroupWithBalance) => sum + g.spent, 0);
   const unallocatedIncome = await getUnallocatedIncome(session.user.id);
+  const health = await computeBudgetHealth(session.user.id);
+  const previousMonthClosedUnderBudget = await didPreviousMonthCloseUnderBudget(session.user.id);
 
   return NextResponse.json({
     overallRemaining: computeOverallRemaining(Number(user.monthlyIncome), totalSpent),
@@ -20,5 +31,7 @@ export async function GET() {
     totalSpent,
     unallocatedIncome,
     groups,
+    budgetHealth: { ...health, grade: computeBudgetHealthGrade(health.overageFrequency) },
+    previousMonthClosedUnderBudget,
   });
 }

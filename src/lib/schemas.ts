@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GROUP_COLOR_KEYS } from "@/lib/group-style";
 
 export const signupSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -17,11 +18,17 @@ export const updateIncomeSchema = z.object({
 export const createGroupSchema = z.object({
   name: z.string().trim().min(1).max(60),
   budgetCap: z.number().positive(),
+  color: z.enum(GROUP_COLOR_KEYS as [string, ...string[]]).optional(),
+  icon: z.string().trim().min(1).max(4).optional(),
+  rolloverEnabled: z.boolean().optional(),
 });
 
 export const updateGroupSchema = z.object({
   name: z.string().trim().min(1).max(60).optional(),
   budgetCap: z.number().positive().optional(),
+  color: z.enum(GROUP_COLOR_KEYS as [string, ...string[]]).optional(),
+  icon: z.string().trim().min(1).max(4).optional(),
+  rolloverEnabled: z.boolean().optional(),
 });
 
 export const createExpenseSchema = z.object({

@@ -25,21 +25,32 @@ Returns `{ id, email, monthlyIncome }` for the current user.
 ## Budget groups
 
 ### `GET /api/groups`
-Returns `{ data: GroupWithBalance[] }` - active (non-archived) groups for the current month, each with `{ ...group, budgetCap, cap, spent, remaining, isOverCap, overageAmount }` (live-computed via `computeGroupBalance`).
+Returns `{ data: GroupWithBalance[] }` - active (non-archived) groups for the current month, each with `{ ...group, budgetCap, baseCap, rolloverAmount, cap, spent, remaining, isOverCap, overageAmount }` (live-computed via `computeGroupBalance`). `cap` is the effective cap (`baseCap` plus any rollover surplus, see below); `budgetCap`/`baseCap` are both the raw stored cap.
+
+### `GET /api/groups?archived=1`
+Returns `{ data: <ExpenseGroup & { budgetCap: number }>[] }` - the caller's archived groups (no balance fields, since archived groups are excluded from month-over-month spend tracking).
 
 ### `POST /api/groups`
-- Body: `{ name: string (1-60), budgetCap: number (> 0) }` (`createGroupSchema`)
-- `409 { error: "Group name already exists" }` if a case-insensitive name match exists for this user.
+- Body: `{ name: string (1-60), budgetCap: number (> 0), color?: GroupColorKey, icon?: string (1-4 chars), rolloverEnabled?: boolean }` (`createGroupSchema`; `color` must be one of the keys in `src/lib/group-style.ts#GROUP_COLOR_KEYS`)
+- `409 { error: "Group name already exists" }` if an active case-insensitive name match exists for this user.
+- `409 { error: string, archivedGroupId: string }` if the only match is an archived group - restore it via the restore endpoint below instead of creating a duplicate (the DB has a hard `(userId, name)` unique constraint that includes archived rows).
 - `201 <ExpenseGroup>` on success. Also creates a `BudgetPeriod` row for the current month.
 
 ### `PATCH /api/groups/[id]`
-- Body: `{ name?: string, budgetCap?: number }` (`updateGroupSchema`, both optional)
+- Body: `{ name?: string, budgetCap?: number, color?: GroupColorKey, icon?: string, rolloverEnabled?: boolean }` (`updateGroupSchema`, all optional)
 - `404 { error: "Not found" }` if the group doesn't belong to the caller.
+- `409` (same shape as `POST`, including `archivedGroupId` when applicable) if the new `name` collides with an existing group.
 - If `budgetCap` changes, upserts the current month's `BudgetPeriod`.
 - Returns updated `<ExpenseGroup>`.
 
 ### `DELETE /api/groups/[id]`
 Archives (soft-deletes, `isArchived: true`) - does not hard-delete. `404` if not owned. `200 { success: true }`.
+
+### `POST /api/groups/[id]/restore`
+Un-archives a group (`isArchived: false`). `404` if not owned or not currently archived. `409 { error: "An active group with this name already exists" }` if an active group has since taken the same name. Returns the restored `<ExpenseGroup>`.
+
+### `DELETE /api/groups/[id]/permanent`
+Permanently hard-deletes an **archived** group and, via `onDelete: Cascade`, all of its `Expense` and `BudgetPeriod` rows. Irreversible. `404 { error: "Not found or not archived" }` if the group isn't owned or is still active (must be archived first via `DELETE /api/groups/[id]`). `200 { success: true }`.
 
 ## Expenses
 
@@ -88,10 +99,12 @@ Returns:
   "monthlyIncome": number,
   "totalSpent": number,
   "unallocatedIncome": number,
-  "groups": GroupWithBalance[]
+  "groups": GroupWithBalance[],
+  "budgetHealth": { "grade": "A"|"B"|"C"|"D"|"F", "overageFrequency": number, "monthsConsidered": number },
+  "previousMonthClosedUnderBudget": boolean | null
 }
 ```
-`unallocatedIncome = monthlyIncome - sum(active group budgetCaps)`.
+`unallocatedIncome = monthlyIncome - sum(active group budgetCaps)`. `budgetHealth.grade` is derived (`computeBudgetHealthGrade`) from the fraction of past completed group-months that went over their recorded cap; `monthsConsidered: 0` when there's no history yet. `previousMonthClosedUnderBudget` is `null` when there's no prior-month `BudgetPeriod` data to compare against.
 
 ## AI insight
 

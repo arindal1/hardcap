@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeGroupBalance, computeOverallRemaining, computeUnallocatedIncome } from "@/lib/budget";
+import {
+  computeBudgetHealthGrade,
+  computeGroupBalance,
+  computeOverallRemaining,
+  computeRolloverAmount,
+  computeUnallocatedIncome,
+} from "@/lib/budget";
 
 describe("computeGroupBalance", () => {
   it("returns remaining balance and not-over-cap when spend is under cap", () => {
@@ -60,5 +66,41 @@ describe("computeUnallocatedIncome", () => {
 
   it("allows a negative result when caps exceed income (over-allocated)", () => {
     expect(computeUnallocatedIncome(1000, 1200)).toBe(-200);
+  });
+});
+
+describe("computeRolloverAmount", () => {
+  it("carries forward the unspent surplus", () => {
+    expect(computeRolloverAmount(500, 300)).toBe(200);
+  });
+
+  it("never carries a negative amount when last month went over cap", () => {
+    expect(computeRolloverAmount(500, 700)).toBe(0);
+  });
+
+  it("is zero when spend exactly matched the cap", () => {
+    expect(computeRolloverAmount(500, 500)).toBe(0);
+  });
+});
+
+describe("computeBudgetHealthGrade", () => {
+  it("grades A for zero overage frequency", () => {
+    expect(computeBudgetHealthGrade(0)).toBe("A");
+  });
+
+  it("grades B within the low-overage band", () => {
+    expect(computeBudgetHealthGrade(0.15)).toBe("B");
+  });
+
+  it("grades C within the moderate-overage band", () => {
+    expect(computeBudgetHealthGrade(0.35)).toBe("C");
+  });
+
+  it("grades D within the high-overage band", () => {
+    expect(computeBudgetHealthGrade(0.6)).toBe("D");
+  });
+
+  it("grades F above the high-overage band", () => {
+    expect(computeBudgetHealthGrade(0.61)).toBe("F");
   });
 });

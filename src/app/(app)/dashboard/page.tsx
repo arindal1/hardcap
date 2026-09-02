@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDashboardSummary, useExpenses } from "@/lib/queries";
 import { apiFetch } from "@/lib/api-client";
@@ -9,13 +9,25 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { AmbientField } from "@/components/AmbientField";
 import { NeuInput } from "@/components/NeuInput";
 import { NeuButton } from "@/components/NeuButton";
+import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { SpendVsBudgetChart } from "@/components/charts/SpendVsBudgetChart";
 import { SpendOverTimeChart, type DailyPoint } from "@/components/charts/SpendOverTimeChart";
 import { OverallBalanceTrendChart } from "@/components/charts/OverallBalanceTrendChart";
+import { groupColor } from "@/lib/group-style";
+import { fireConfetti } from "@/lib/confetti";
+import type { BudgetHealthGrade } from "@/lib/budget";
 
 function currency(n: number) {
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  return n.toLocaleString("en-IN", { style: "currency", currency: "INR" });
 }
+
+const HEALTH_GRADE_COLOR: Record<BudgetHealthGrade, string> = {
+  A: "var(--color-success)",
+  B: "var(--color-success)",
+  C: "var(--color-accent-strong)",
+  D: "var(--color-danger)",
+  F: "var(--color-danger)",
+};
 
 function currentMonthPrefix() {
   return new Date().toISOString().slice(0, 7);
@@ -63,6 +75,16 @@ export default function DashboardPage() {
     queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
   }
 
+  // Celebrate once per month, the first time the dashboard loads after a
+  // month closed under budget - localStorage flag stops it firing every visit.
+  useEffect(() => {
+    if (data?.previousMonthClosedUnderBudget !== true) return;
+    const key = `hardcap-confetti-shown-${currentMonthPrefix()}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    fireConfetti();
+  }, [data?.previousMonthClosedUnderBudget]);
+
   if (isLoading) return <p className="text-(--color-text-muted)">Loading…</p>;
   if (error || !data) return <p className="text-(--color-danger)">Failed to load dashboard.</p>;
 
@@ -73,19 +95,20 @@ export default function DashboardPage() {
       <RevealOnMount>
         <section className="neu-raised p-6 sm:p-10">
           <p className="eyebrow">01 - Overall remaining</p>
-          <p
-            className={`tabular mt-6 break-words font-(family-name:--font-display) text-4xl italic leading-none sm:text-6xl lg:text-8xl ${
+          <AnimatedNumber
+            value={data.overallRemaining}
+            formatter={currency}
+            className={`tabular mt-6 block break-words font-(family-name:--font-display) text-4xl italic leading-none sm:text-6xl lg:text-8xl ${
               data.overallRemaining < 0 ? "text-(--color-danger)" : "text-(--color-accent-strong)"
             }`}
-          >
-            {currency(data.overallRemaining)}
-          </p>
+          />
           <div className="hairline my-6 max-w-xs" />
           <p className="text-sm text-(--color-text-secondary)">
-            {currency(data.totalSpent)} spent of {currency(data.monthlyIncome)} income
+            <AnimatedNumber value={data.totalSpent} formatter={currency} /> spent of{" "}
+            <AnimatedNumber value={data.monthlyIncome} formatter={currency} /> income
           </p>
           <p className="mt-1 text-xs text-(--color-text-muted)">
-            Unallocated income: {currency(data.unallocatedIncome)}
+            Unallocated income: <AnimatedNumber value={data.unallocatedIncome} formatter={currency} />
           </p>
           {editingIncome ? (
             <form onSubmit={handleIncomeSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -116,46 +139,75 @@ export default function DashboardPage() {
         </section>
       </RevealOnMount>
 
+      <RevealOnMount delay={0.05}>
+        <section className="neu-raised flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div>
+            <p className="eyebrow">02 - Budget health</p>
+            <p className="mt-2 text-sm text-(--color-text-muted)">
+              {data.budgetHealth.monthsConsidered > 0
+                ? `Over cap in ${Math.round(data.budgetHealth.overageFrequency * 100)}% of the last ${data.budgetHealth.monthsConsidered} group-month${data.budgetHealth.monthsConsidered === 1 ? "" : "s"}`
+                : "Not enough completed months yet to score"}
+            </p>
+          </div>
+          <p
+            className="font-(family-name:--font-display) text-6xl italic leading-none"
+            style={{ color: HEALTH_GRADE_COLOR[data.budgetHealth.grade] }}
+          >
+            {data.budgetHealth.grade}
+          </p>
+        </section>
+      </RevealOnMount>
+
       <section className="flex flex-col gap-5">
-        <p className="eyebrow">02 - Groups at a glance</p>
+        <p className="eyebrow">03 - Groups at a glance</p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {data.groups.map((group, i) => (
-            <RevealOnMount key={group.id} delay={i * 0.05}>
-              <div className="neu-raised neu-pressable p-6 transition-transform duration-300 hover:-translate-y-1">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="truncate font-medium">{group.name}</h3>
-                  {group.isOverCap && (
-                    <span className="shrink-0 text-xs text-(--color-danger)">
-                      Over by {currency(group.overageAmount)}
-                    </span>
-                  )}
-                </div>
-                <p
-                  className={`tabular mt-3 text-3xl ${
-                    group.isOverCap ? "text-(--color-danger)" : "text-(--color-text-primary)"
-                  }`}
-                >
-                  {currency(group.remaining)}
-                </p>
-                <p className="mt-1 text-xs text-(--color-text-muted)">
-                  {currency(group.spent)} of {currency(group.cap)} cap
-                </p>
-                <div className="neu-inset mt-4 h-2 w-full overflow-hidden">
-                  <div
-                    className={`h-full transition-[width] duration-500 ease-out ${
-                      group.isOverCap ? "bg-(--color-danger)" : "bg-(--color-accent)"
+          {data.groups.map((group, i) => {
+            const color = groupColor(group.color);
+            return (
+              <RevealOnMount key={group.id} delay={i * 0.05}>
+                <div className="neu-raised neu-pressable p-6 transition-transform duration-300 hover:-translate-y-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="flex min-w-0 items-center gap-2 truncate font-medium">
+                      <span aria-hidden>{group.icon}</span>
+                      <span className="truncate">{group.name}</span>
+                    </h3>
+                    {group.isOverCap && (
+                      <span className="shrink-0 text-xs text-(--color-danger)">
+                        Over by {currency(group.overageAmount)}
+                      </span>
+                    )}
+                  </div>
+                  <AnimatedNumber
+                    value={group.remaining}
+                    formatter={currency}
+                    className={`tabular mt-3 block text-3xl ${
+                      group.isOverCap ? "text-(--color-danger)" : "text-(--color-text-primary)"
                     }`}
-                    style={{ width: `${Math.min(100, (group.spent / group.cap) * 100)}%` }}
                   />
+                  <p className="mt-1 text-xs text-(--color-text-muted)">
+                    {currency(group.spent)} of {currency(group.cap)} cap
+                    {group.rolloverEnabled && group.rolloverAmount > 0 && (
+                      <> · +{currency(group.rolloverAmount)} rolled over</>
+                    )}
+                  </p>
+                  <div className="neu-inset mt-4 h-2 w-full overflow-hidden">
+                    <div
+                      className="h-full transition-[width] duration-500 ease-out"
+                      style={{
+                        width: `${Math.min(100, (group.spent / group.cap) * 100)}%`,
+                        backgroundColor: group.isOverCap ? "var(--color-danger)" : color.accent,
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </RevealOnMount>
-          ))}
+              </RevealOnMount>
+            );
+          })}
         </div>
       </section>
 
       <ScrollReveal className="flex flex-col gap-5" stagger>
-        <p className="eyebrow">03 - Charts</p>
+        <p className="eyebrow">04 - Charts</p>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <SpendVsBudgetChart groups={data.groups} />
           <SpendOverTimeChart data={dailySeries} />

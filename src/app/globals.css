@@ -99,7 +99,6 @@ body {
   mix-blend-mode: overlay;
 }
 
-
 /* Editorial furniture: numbered eyebrows + hairline rules used across every page header. */
 .eyebrow {
   display: flex;

@@ -28,6 +28,9 @@ erDiagram
         string userId FK
         string name
         decimal budgetCap
+        string color "palette key, default gold"
+        string icon "emoji glyph"
+        bool rolloverEnabled
         bool isArchived
     }
     BudgetPeriod {
@@ -73,7 +76,7 @@ erDiagram
 Per-user record. `passwordHash` is nullable (OAuth-only users have none). `authProvider` enum: `credentials` | `google`. `monthlyIncome` is `Decimal(12,2)`, defaults to `0`.
 
 ### `expense_groups`
-User-defined budget categories with a hard cap (`budgetCap`, `Decimal(12,2)`). `isArchived` soft-deletes a group (archive, not delete - historical expenses/periods stay intact). Unique on `(userId, name)` - case-sensitive at the DB level; the `groups` POST route does an additional case-insensitive duplicate check before insert. Indexed on `userId`.
+User-defined budget categories with a hard cap (`budgetCap`, `Decimal(12,2)`). `isArchived` soft-deletes a group by default (archive, not delete - historical expenses/periods stay intact) and can be un-archived via `POST /api/groups/[id]/restore`. An archived group can additionally be hard-deleted via `DELETE /api/groups/[id]/permanent`, which cascades to delete its `Expense` and `BudgetPeriod` rows - only permitted while `isArchived: true`, so destroying history requires two deliberate steps. Unique on `(userId, name)` - case-sensitive at the DB level; the `groups` POST/PATCH routes do an additional case-insensitive duplicate check before insert/rename. Indexed on `userId`.
 
 ### `budget_periods`
 Snapshots a group's `budgetCap` per calendar month (`month`, `"YYYY-MM"` string). Written on group creation and whenever `budgetCap` changes (upsert keyed on `(groupId, month)`). Exists so editing a group's *current* cap never rewrites the budget figure for past months. **Not read for current-month balance math** - current spend/remaining is always computed live from `expense_groups.budgetCap` and live-aggregated `expenses`. Unique on `(groupId, month)`, indexed on `(userId, month)`.

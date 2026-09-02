@@ -55,8 +55,12 @@ Centralized in `src/lib/budget.ts` (pure, framework-free):
 - `computeGroupBalance(cap, spent)` - remaining, over-cap flag, overage amount for one group.
 - `computeOverallRemaining(monthlyIncome, totalSpent)` - overall balance across all groups.
 - `computeUnallocatedIncome(monthlyIncome, totalCaps)` - income not yet assigned to any group cap.
+- `computeRolloverAmount(previousCap, previousSpent)` - unspent surplus carried into next month for opted-in groups (`ExpenseGroup.rolloverEnabled`); always `>= 0`, an overspent month never reduces the next month's cap.
+- `computeBudgetHealthGrade(overageFrequency)` - A-F grade from the fraction of past completed group-months that went over cap.
 
-Spend totals are always computed live from `Expense` rows grouped by month (`prisma.expense.groupBy`), never cached/denormalized - this is what guarantees zero drift between logged expenses and displayed balances (PRD primary goal). `BudgetPeriod` exists only to preserve each month's historical cap when a group's current cap changes; it is not used for balance math on the current month.
+Spend totals are always computed live from `Expense` rows grouped by month (`prisma.expense.groupBy`), never cached/denormalized - this is what guarantees zero drift between logged expenses and displayed balances (PRD primary goal). `BudgetPeriod` exists to preserve each month's historical cap when a group's current cap changes, and is also the source `computeRolloverAmount`/`computeBudgetHealth` read from for prior months' caps - it is not used for balance math on the *current* month.
+
+"Month" is always the calendar month (UTC, `YYYY-MM` string keys, `[start of month, start of next month)` range) - there is no per-user custom billing-cycle anchor day (e.g. a salary-credit date) yet. This is a known limitation, not a bug: a user paid on the 28th currently sees balances reset on the 1st, not on their personal cycle boundary.
 
 ## AI insight flow
 

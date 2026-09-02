@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createGroupSchema } from "@/lib/schemas";
-import { createGroup, listGroupsWithBalances } from "@/lib/services/groups";
+import { createGroup, listArchivedGroups, listGroupsWithBalances } from "@/lib/services/groups";
 import { isRateLimited } from "@/lib/rate-limit";
 
-export async function GET() {
+// Balance figures must never be served from a cached route response - always
+// recompute live from the DB (see ARCHITECTURE.md "Balance computation").
+export const dynamic = "force-dynamic";
+
+export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  if (searchParams.get("archived") === "1") {
+    const groups = await listArchivedGroups(session.user.id);
+    return NextResponse.json({ data: groups });
+  }
 
   const groups = await listGroupsWithBalances(session.user.id);
   return NextResponse.json({ data: groups });
@@ -31,9 +41,17 @@ export async function POST(request: NextRequest) {
     where: { userId: session.user.id, name: { equals: parsed.data.name, mode: "insensitive" } },
   });
   if (existing) {
-    return NextResponse.json({ error: "Group name already exists" }, { status: 409 });
+    return NextResponse.json(
+      {
+        error: existing.isArchived
+          ? "An archived group with this name already exists - restore it instead of creating a new one"
+          : "Group name already exists",
+        archivedGroupId: existing.isArchived ? existing.id : undefined,
+      },
+      { status: 409 }
+    );
   }
 
-  const group = await createGroup(session.user.id, parsed.data.name, parsed.data.budgetCap);
+  const group = await createGroup(session.user.id, parsed.data);
   return NextResponse.json(group, { status: 201 });
 }
