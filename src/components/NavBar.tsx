@@ -9,8 +9,9 @@ const links = [
   { href: "/dashboard", label: "Dashboard", glyph: "01" },
   { href: "/groups", label: "Groups", glyph: "02" },
   { href: "/expenses", label: "Expenses", glyph: "03" },
-  { href: "/lending", label: "Lending", glyph: "04" },
-  { href: "/insight", label: "Insight", glyph: "05" },
+  { href: "/goals", label: "Goals", glyph: "04" },
+  { href: "/lending", label: "Lending", glyph: "05" },
+  { href: "/insight", label: "Insight", glyph: "06" },
 ];
 
 /** Desktop: floating pill nav with a sliding active indicator. Mobile: fixed bottom tab bar (see BottomNav). */

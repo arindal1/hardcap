@@ -26,6 +26,9 @@ model User {
   expenses      Expense[]
   lendingEntries LendingEntry[]
   insightSnapshots AIInsightRequestSnapshot[]
+  monthEndReviews MonthEndReviewSnapshot[]
+  goals            Goal[]
+  goalContributions GoalContribution[]
   accounts      Account[]
   sessions      Session[]
 
@@ -82,6 +85,11 @@ model ExpenseGroup {
   color           String   @default("gold")
   icon            String   @default("💰")
   rolloverEnabled Boolean  @default(false)
+  // At most one non-archived group per user should have this set (enforced in
+  // the service layer, not the DB). Overage from every other group is drawn
+  // from this group's balance instead of the user's overall balance going
+  // negative unchecked - see lib/budget.ts computeEmergencyFundBalance.
+  isEmergencyFund Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -160,4 +168,58 @@ model AIInsightRequestSnapshot {
 
   @@index([userId, month])
   @@map("ai_insight_snapshots")
+}
+
+// One cached AI-generated narrative per completed month, generated on-demand
+// (no scheduler exists) the first time the user asks for that month's review.
+model MonthEndReviewSnapshot {
+  id           String   @id @default(uuid())
+  userId       String
+  month        String // "YYYY-MM", always a completed month
+  generatedAt  DateTime @default(now())
+  inputSummary Json
+  responseText String   @db.Text
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+  @@map("month_end_reviews")
+}
+
+// A savings "pot" - money set aside toward a goal. Saved amount is earmarked
+// and excluded from unallocated income; it cannot be assigned to a group or
+// spent directly, and carries forward across months until the goal completes.
+model Goal {
+  id           String    @id @default(uuid())
+  userId       String
+  name         String
+  icon         String    @default("🎯")
+  targetAmount Decimal   @db.Decimal(12, 2)
+  savedAmount  Decimal   @default(0) @db.Decimal(12, 2)
+  isCompleted  Boolean   @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributions GoalContribution[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("goals")
+}
+
+// Signed ledger entry for a goal: positive = contribution, negative = withdrawal.
+model GoalContribution {
+  id        String   @id @default(uuid())
+  userId    String
+  goalId    String
+  amount    Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([userId, goalId])
+  @@map("goal_contributions")
 }

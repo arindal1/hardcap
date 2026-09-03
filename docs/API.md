@@ -31,15 +31,16 @@ Returns `{ data: GroupWithBalance[] }` - active (non-archived) groups for the cu
 Returns `{ data: <ExpenseGroup & { budgetCap: number }>[] }` - the caller's archived groups (no balance fields, since archived groups are excluded from month-over-month spend tracking).
 
 ### `POST /api/groups`
-- Body: `{ name: string (1-60), budgetCap: number (> 0), color?: GroupColorKey, icon?: string (1-4 chars), rolloverEnabled?: boolean }` (`createGroupSchema`; `color` must be one of the keys in `src/lib/group-style.ts#GROUP_COLOR_KEYS`)
+- Body: `{ name: string (1-60), budgetCap: number (> 0), color?: GroupColorKey, icon?: string (1-4 chars), rolloverEnabled?: boolean, isEmergencyFund?: boolean }` (`createGroupSchema`; `color` must be one of the keys in `src/lib/group-style.ts#GROUP_COLOR_KEYS`)
 - `409 { error: "Group name already exists" }` if an active case-insensitive name match exists for this user.
 - `409 { error: string, archivedGroupId: string }` if the only match is an archived group - restore it via the restore endpoint below instead of creating a duplicate (the DB has a hard `(userId, name)` unique constraint that includes archived rows).
+- `409 { error: "Only one active group can be the Emergency Fund" }` if `isEmergencyFund: true` and another active group already has the flag.
 - `201 <ExpenseGroup>` on success. Also creates a `BudgetPeriod` row for the current month.
 
 ### `PATCH /api/groups/[id]`
-- Body: `{ name?: string, budgetCap?: number, color?: GroupColorKey, icon?: string, rolloverEnabled?: boolean }` (`updateGroupSchema`, all optional)
+- Body: `{ name?: string, budgetCap?: number, color?: GroupColorKey, icon?: string, rolloverEnabled?: boolean, isEmergencyFund?: boolean }` (`updateGroupSchema`, all optional)
 - `404 { error: "Not found" }` if the group doesn't belong to the caller.
-- `409` (same shape as `POST`, including `archivedGroupId` when applicable) if the new `name` collides with an existing group.
+- `409` (same shape as `POST`, including `archivedGroupId` when applicable) if the new `name` collides with an existing group, or the Emergency Fund conflict above.
 - If `budgetCap` changes, upserts the current month's `BudgetPeriod`.
 - Returns updated `<ExpenseGroup>`.
 
@@ -89,6 +90,30 @@ Returns `{ data: LendingEntry[] }`, ordered by `date` desc.
 ### `DELETE /api/lending/[id]`
 `404` if not owned. `200 { success: true }`.
 
+## Goal savings
+
+Savings "pots" - money earmarked toward a goal, excluded from unallocated income, cannot be assigned to a budget group. Independent of the expense/budget system except that its total saved amount reduces `unallocatedIncome`.
+
+### `GET /api/goals`
+Returns `{ data: Goal[] }`, active goals first then completed, each with `targetAmount`/`savedAmount` as numbers.
+
+### `POST /api/goals`
+- Body: `{ name: string (1-60), targetAmount: number (> 0), icon?: string (1-4 chars) }` (`createGoalSchema`)
+- `409 { error: "A goal with this name already exists" }` on a case-insensitive name collision for this user.
+- `201 <Goal>`.
+
+### `PATCH /api/goals/[id]`
+- Body: any subset of `{ name, targetAmount, icon }` (`updateGoalSchema`).
+- `404` if not owned. `409` on name collision. Returns updated `<Goal>`.
+
+### `DELETE /api/goals/[id]`
+`404` if not owned. `200 { success: true }`.
+
+### `POST /api/goals/[id]/contribute`
+- Body: `{ amount: number (!= 0) }` (`contributeGoalSchema`) - positive deposits, negative withdraws.
+- `400 { error: "Withdrawal amount exceeds the goal's saved amount" }` if a withdrawal would drop `savedAmount` below zero.
+- `404` if not owned. Writes a `GoalContribution` audit row and updates `Goal.savedAmount`; sets `isCompleted`/`completedAt` once `savedAmount >= targetAmount`. Returns updated `<Goal>`.
+
 ## Dashboard
 
 ### `GET /api/dashboard/summary`
@@ -101,10 +126,12 @@ Returns:
   "unallocatedIncome": number,
   "groups": GroupWithBalance[],
   "budgetHealth": { "grade": "A"|"B"|"C"|"D"|"F", "overageFrequency": number, "monthsConsidered": number },
-  "previousMonthClosedUnderBudget": boolean | null
+  "previousMonthClosedUnderBudget": boolean | null,
+  "burnRate": { "spentFraction": number, "timeFraction": number, "pace": "ahead"|"on-track"|"behind" },
+  "spendHeatmap": { "date": string, "intensity": "none"|"light"|"normal"|"heavy" }[]
 }
 ```
-`unallocatedIncome = monthlyIncome - sum(active group budgetCaps)`. `budgetHealth.grade` is derived (`computeBudgetHealthGrade`) from the fraction of past completed group-months that went over their recorded cap; `monthsConsidered: 0` when there's no history yet. `previousMonthClosedUnderBudget` is `null` when there's no prior-month `BudgetPeriod` data to compare against.
+`unallocatedIncome = monthlyIncome - sum(active group budgetCaps) - sum(active goal savedAmounts)`. `GroupWithBalance` additionally includes `isEmergencyFund: boolean` and `drawnFromOverage: number` (non-zero only on the Emergency Fund group - the total overage amount absorbed from every other active group this month, see `docs/ARCHITECTURE.md#emergency-fund`). `budgetHealth.grade` is derived (`computeBudgetHealthGrade`) from the fraction of past completed group-months that went over their recorded cap; `monthsConsidered: 0` when there's no history yet. `previousMonthClosedUnderBudget` is `null` when there's no prior-month `BudgetPeriod` data to compare against. `burnRate` compares % of total budget spent vs. % of the month elapsed (`computeBurnRate`). `spendHeatmap` covers the trailing ~182 days, one entry per day, classified relative to the window's average daily spend (`classifySpendIntensity`).
 
 ## AI insight
 
@@ -116,6 +143,23 @@ Returns:
 
 ### `GET /api/insight/history`
 Returns `{ data: AIInsightRequestSnapshot[] }` for the current user, ordered by `requestedAt` desc. Deliberately a separate route file from `POST /api/insight` per the PRD's exact endpoint contract - do not merge.
+
+## Month-end review
+
+On-demand only - no scheduler exists, so a report is generated the first time it's requested for a given completed month, then cached.
+
+### `GET /api/month-end-review`
+Returns `{ data: string[] }` - `YYYY-MM` months that have `BudgetPeriod` data (i.e. the user had active groups that month) and are before the current month, but don't yet have a `MonthEndReviewSnapshot`. Drives the "pick a month to review" selector.
+
+### `POST /api/month-end-review`
+- Body: `{ month: string ("YYYY-MM") }` (`generateMonthEndReviewSchema`).
+- `400 { error: "Can only generate a review for a completed month" }` if `month` is the current month or later.
+- `502 { error: "Failed to generate review" }` if the Gemini call fails.
+- If a snapshot for `(userId, month)` already exists, returns it unchanged instead of calling Gemini again (cache, not idempotent regeneration).
+- `201 <MonthEndReviewSnapshot>` - `{ id, userId, month, generatedAt, inputSummary, responseText }`.
+
+### `GET /api/month-end-review/history`
+Returns `{ data: MonthEndReviewSnapshot[] }` for the current user, ordered by `month` desc.
 
 ## Error shape convention
 

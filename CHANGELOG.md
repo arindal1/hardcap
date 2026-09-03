@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.5.0]
+
+### Added
+- **Emergency Fund**: a group can be flagged `isEmergencyFund` (at most one active per user); it now automatically absorbs every other active group's overage instead of those groups showing scattered negative balances (`computeEmergencyFundBalance` in `src/lib/budget.ts`, wired in `listGroupsWithBalances`). Surfaced on the Groups page with an "EF" badge and a "drawn from overage" line.
+- **Goal savings ("pots")**: new `Goal`/`GoalContribution` models and `/goals` page - money allocated to a goal is excluded from unallocated income and can't be assigned to a budget group; it carries forward across months until the goal's target is reached. Deposits/withdrawals are signed ledger entries (`contributeToGoal` in `src/lib/services/goals.ts`); reaching the target fires the existing confetti celebration.
+- **Money burn rate**: `computeBurnRate` (`src/lib/budget.ts`) compares % of total budget spent vs. % of the month elapsed; shown on the dashboard via `BurnRatePanel`.
+- **Spending heatmap**: GitHub-style calendar (`SpendingHeatmap` component) over the trailing ~182 days, classifying each day's spend (`none`/`light`/`normal`/`heavy`) relative to the trailing average (`classifySpendIntensity`).
+- **Dynamic dashboard background**: `AmbientField`'s particle drift speed/opacity now scale with the current burn rate (`spentFraction`) instead of being constant - busier on high-spend days, calmer on light ones.
+- **Month-end review**: on-demand (no scheduler exists) Gemini-generated report for a completed month, cached per `(userId, month)` in a new `MonthEndReviewSnapshot` model. Generated from the Insight page's new "Month-end review" section.
+- **AI budget optimizer**: folded into the existing `/api/insight` Gemini prompt rather than a new endpoint - the response now includes a "Reallocation suggestions" Markdown section with concrete move-money suggestions between named groups when the data supports it.
+- **Markdown rendering for Gemini responses**: both insight and month-end review `responseText` now render via `react-markdown` + `remark-gfm` inside a new `.prose-neu` CSS scope (`globals.css`) instead of plain preformatted text.
+- **Smart notifications**: `NotificationCenter` component (mounted app-wide) raises in-app toasts, an optional browser `Notification`, and a short Web Audio chime for near-cap (90%+), over-cap, and overall-negative conditions - deduped per condition per day via `localStorage`. In-tab only; no service worker/push infrastructure yet.
+
+### Changed
+- `computeUnallocatedIncome` now takes an optional third `totalGoalSaved` argument so goal pots are excluded from unallocated income the same way group caps already were.
+- `GroupWithBalance` (API + client type) gained `isEmergencyFund` and `drawnFromOverage` fields.
+- `GET /api/dashboard/summary` response gained `burnRate` and `spendHeatmap` fields.
+- `createGroupSchema`/`updateGroupSchema` gained an optional `isEmergencyFund` boolean.
+
 ## [0.4.0]
 
 ### Added
@@ -37,7 +56,7 @@ All notable changes to this project are documented here. Format based on [Keep a
 ## [0.3.3]
 
 ### Fixed
-- `src/middleware.ts`/`src/lib/auth.ts`: login/signup failed on every device except the one holding a stale cached session - middleware runs on the Edge runtime and imported the full `auth.ts`, which pulls in `PrismaAdapter`/`bcryptjs` (both Node-only), crashing middleware on Render for every request and breaking the CSP nonce. Split into `src/lib/auth.config.ts` (Edge-safe: session strategy, pages, jwt/session callbacks) used by middleware, and the full Node-only config in `auth.ts` (adapter, providers) used by API routes. Also added `trustHost: true` to `auth.ts` for correct origin detection behind Render's reverse proxy.
+- `src/middleware.ts`/`src/lib/auth.ts`: login/signup failed on every device except the one holding a stale cached session — middleware runs on the Edge runtime and imported the full `auth.ts`, which pulls in `PrismaAdapter`/`bcryptjs` (both Node-only), crashing middleware on Render for every request and breaking the CSP nonce. Split into `src/lib/auth.config.ts` (Edge-safe: session strategy, pages, jwt/session callbacks) used by middleware, and the full Node-only config in `auth.ts` (adapter, providers) used by API routes. Also added `trustHost: true` to `auth.ts` for correct origin detection behind Render's reverse proxy.
 
 
 ## [0.3.2]

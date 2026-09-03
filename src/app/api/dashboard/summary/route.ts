@@ -8,6 +8,7 @@ import {
   listGroupsWithBalances,
   getUnallocatedIncome,
 } from "@/lib/services/groups";
+import { getBurnRate, getSpendHeatmap } from "@/lib/services/analytics";
 import type { GroupWithBalance } from "@/lib/types";
 
 // Balance figures must never be served from a cached route response - always
@@ -24,6 +25,8 @@ export async function GET() {
   const unallocatedIncome = await getUnallocatedIncome(session.user.id);
   const health = await computeBudgetHealth(session.user.id);
   const previousMonthClosedUnderBudget = await didPreviousMonthCloseUnderBudget(session.user.id);
+  const burnRate = await getBurnRate(session.user.id);
+  const spendHeatmap = await getSpendHeatmap(session.user.id);
 
   return NextResponse.json({
     overallRemaining: computeOverallRemaining(Number(user.monthlyIncome), totalSpent),
@@ -33,5 +36,7 @@ export async function GET() {
     groups,
     budgetHealth: { ...health, grade: computeBudgetHealthGrade(health.overageFrequency) },
     previousMonthClosedUnderBudget,
+    burnRate,
+    spendHeatmap,
   });
 }

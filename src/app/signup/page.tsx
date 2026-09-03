@@ -10,7 +10,7 @@ import { AmbientField } from "@/components/AmbientField";
 import { RevealOnMount } from "@/components/RevealOnMount";
 import { apiFetch } from "@/lib/api-client";
 
-// See src/app/login/page.tsx for why this must stay dynamic - a statically
+// See src/app/login/page.tsx for why this must stay dynamic — a statically
 // optimized page would bake a build-time CSP nonce into its inline scripts
 // that never matches the fresh per-request nonce middleware sets, silently
 // blocking hydration on any client without a cache already carrying a

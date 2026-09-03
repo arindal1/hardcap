@@ -13,6 +13,8 @@ import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { SpendVsBudgetChart } from "@/components/charts/SpendVsBudgetChart";
 import { SpendOverTimeChart, type DailyPoint } from "@/components/charts/SpendOverTimeChart";
 import { OverallBalanceTrendChart } from "@/components/charts/OverallBalanceTrendChart";
+import { BurnRatePanel } from "@/components/BurnRatePanel";
+import { SpendingHeatmap } from "@/components/SpendingHeatmap";
 import { groupColor } from "@/lib/group-style";
 import { fireConfetti } from "@/lib/confetti";
 import type { BudgetHealthGrade } from "@/lib/budget";
@@ -90,7 +92,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <AmbientField />
+      <AmbientField intensity={data.burnRate.spentFraction} />
 
       <RevealOnMount>
         <section className="neu-raised p-6 sm:p-10">
@@ -214,6 +216,14 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <OverallBalanceTrendChart data={dailySeries} />
           </div>
+        </div>
+      </ScrollReveal>
+
+      <ScrollReveal className="grid grid-cols-1 gap-5 lg:grid-cols-2" stagger>
+        <p className="eyebrow lg:col-span-2">05 - Pace &amp; patterns</p>
+        <BurnRatePanel burnRate={data.burnRate} />
+        <div className="lg:col-span-2">
+          <SpendingHeatmap days={data.spendHeatmap} />
         </div>
       </ScrollReveal>
     </div>

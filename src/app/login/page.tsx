@@ -11,7 +11,7 @@ import { RevealOnMount } from "@/components/RevealOnMount";
 
 // Middleware sets a fresh CSP nonce on every request. Statically optimizing
 // this page would freeze a build-time nonce into its inline scripts, which
-// would never match the per-request CSP header - silently blocking
+// would never match the per-request CSP header — silently blocking
 // hydration (and thus this form's onSubmit handler) on any client without a
 // cache already carrying a matching bundle.
 export const dynamic = "force-dynamic";

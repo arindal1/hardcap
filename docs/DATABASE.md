@@ -11,10 +11,14 @@ erDiagram
     User ||--o{ LendingEntry : owns
     User ||--o{ BudgetPeriod : owns
     User ||--o{ AIInsightRequestSnapshot : owns
+    User ||--o{ MonthEndReviewSnapshot : owns
+    User ||--o{ Goal : owns
+    User ||--o{ GoalContribution : owns
     User ||--o{ Account : "NextAuth"
     User ||--o{ Session : "NextAuth"
     ExpenseGroup ||--o{ Expense : contains
     ExpenseGroup ||--o{ BudgetPeriod : "monthly cap history"
+    Goal ||--o{ GoalContribution : "deposit/withdrawal ledger"
 
     User {
         string id PK
@@ -31,6 +35,7 @@ erDiagram
         string color "palette key, default gold"
         string icon "emoji glyph"
         bool rolloverEnabled
+        bool isEmergencyFund "at most one active per user"
         bool isArchived
     }
     BudgetPeriod {
@@ -66,6 +71,30 @@ erDiagram
         json inputSummary
         text responseText
     }
+    MonthEndReviewSnapshot {
+        string id PK
+        string userId FK
+        string month "YYYY-MM, unique per user"
+        datetime generatedAt
+        json inputSummary
+        text responseText
+    }
+    Goal {
+        string id PK
+        string userId FK
+        string name
+        string icon
+        decimal targetAmount
+        decimal savedAmount
+        bool isCompleted
+        datetime completedAt
+    }
+    GoalContribution {
+        string id PK
+        string userId FK
+        string goalId FK
+        decimal amount "signed: positive=deposit, negative=withdrawal"
+    }
 ```
 
 `Account`, `Session`, `VerificationToken` are standard NextAuth/`@auth/prisma-adapter` tables (OAuth account linking, JWT-adjacent session rows, email-verification tokens) - not modified from the adapter's expected shape.
@@ -76,7 +105,7 @@ erDiagram
 Per-user record. `passwordHash` is nullable (OAuth-only users have none). `authProvider` enum: `credentials` | `google`. `monthlyIncome` is `Decimal(12,2)`, defaults to `0`.
 
 ### `expense_groups`
-User-defined budget categories with a hard cap (`budgetCap`, `Decimal(12,2)`). `isArchived` soft-deletes a group by default (archive, not delete - historical expenses/periods stay intact) and can be un-archived via `POST /api/groups/[id]/restore`. An archived group can additionally be hard-deleted via `DELETE /api/groups/[id]/permanent`, which cascades to delete its `Expense` and `BudgetPeriod` rows - only permitted while `isArchived: true`, so destroying history requires two deliberate steps. Unique on `(userId, name)` - case-sensitive at the DB level; the `groups` POST/PATCH routes do an additional case-insensitive duplicate check before insert/rename. Indexed on `userId`.
+User-defined budget categories with a hard cap (`budgetCap`, `Decimal(12,2)`). `isArchived` soft-deletes a group by default (archive, not delete - historical expenses/periods stay intact) and can be un-archived via `POST /api/groups/[id]/restore`. An archived group can additionally be hard-deleted via `DELETE /api/groups/[id]/permanent`, which cascades to delete its `Expense` and `BudgetPeriod` rows - only permitted while `isArchived: true`, so destroying history requires two deliberate steps. `isEmergencyFund` marks at most one active group per user (enforced in `src/lib/services/groups.ts`, not a DB constraint) as the fund that absorbs every other active group's overage - see `docs/ARCHITECTURE.md#emergency-fund`. Unique on `(userId, name)` - case-sensitive at the DB level; the `groups` POST/PATCH routes do an additional case-insensitive duplicate check before insert/rename. Indexed on `userId`.
 
 ### `budget_periods`
 Snapshots a group's `budgetCap` per calendar month (`month`, `"YYYY-MM"` string). Written on group creation and whenever `budgetCap` changes (upsert keyed on `(groupId, month)`). Exists so editing a group's *current* cap never rewrites the budget figure for past months. **Not read for current-month balance math** - current spend/remaining is always computed live from `expense_groups.budgetCap` and live-aggregated `expenses`. Unique on `(groupId, month)`, indexed on `(userId, month)`.
@@ -88,7 +117,16 @@ One row per logged transaction. `amount` positive `Decimal(12,2)`, `note` option
 Independent ledger - does **not** affect budget/expense totals. `personName`, `amount`, `reason` (optional), `date`, `isSettled` (bool) + `settledAt` (set when marked settled, cleared to `null` when unmarked). Indexed on `userId`.
 
 ### `ai_insight_snapshots`
-One row per **successful** Gemini call. `inputSummary` (`Json`) stores the exact payload sent to Gemini (month, income, per-group cap/spent/remaining, days remaining); `responseText` (`Text`) stores the raw advice text. Indexed on `(userId, month)`. A failed Gemini call writes nothing.
+One row per **successful** Gemini call. `inputSummary` (`Json`) stores the exact payload sent to Gemini (month, income, per-group cap/spent/remaining, days remaining); `responseText` (`Text`) stores the raw advice text (Markdown, rendered client-side). Indexed on `(userId, month)`. A failed Gemini call writes nothing.
+
+### `month_end_reviews`
+One cached row per `(userId, month)` (`@@unique`) - a completed month's AI-generated review, generated the first time it's requested since there's no scheduler to auto-generate it. `inputSummary`/`responseText` follow the same shape/rendering convention as `ai_insight_snapshots`.
+
+### `goals`
+A savings "pot": `targetAmount`, running `savedAmount` (both `Decimal(12,2)`), `isCompleted` + `completedAt` set once `savedAmount >= targetAmount`. Unlike a group cap, saved money cannot be spent directly or assigned to a group - it's excluded from `unallocatedIncome` (see `computeUnallocatedIncome`) and carries forward indefinitely (no monthly reset) until completed. Unique on `(userId, name)`, indexed on `userId`.
+
+### `goal_contributions`
+Signed audit ledger for a `Goal`: positive `amount` = deposit, negative = withdrawal. Every call to `contributeToGoal` writes one row here and updates the parent `Goal.savedAmount` in the same transaction. Indexed on `(userId, goalId)`.
 
 ## Conventions
 

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import type { DashboardSummary, Expense, GroupWithBalance, LendingEntry } from "@/lib/types";
+import type { DashboardSummary, Expense, Goal, GroupWithBalance, LendingEntry } from "@/lib/types";
 
 export function useDashboardSummary() {
   return useQuery({
@@ -53,5 +53,12 @@ export function useLending() {
   return useQuery({
     queryKey: ["lending"],
     queryFn: () => apiFetch<{ data: LendingEntry[] }>("/api/lending").then((r) => r.data),
+  });
+}
+
+export function useGoals() {
+  return useQuery({
+    queryKey: ["goals"],
+    queryFn: () => apiFetch<{ data: Goal[] }>("/api/goals").then((r) => r.data),
   });
 }

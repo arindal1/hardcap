@@ -23,6 +23,7 @@ export default function GroupsPage() {
   const [color, setColor] = useState<string>("gold");
   const [icon, setIcon] = useState<string>(GROUP_ICONS[0]);
   const [rolloverEnabled, setRolloverEnabled] = useState(false);
+  const [isEmergencyFund, setIsEmergencyFund] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conflictGroupId, setConflictGroupId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -31,6 +32,7 @@ export default function GroupsPage() {
   const [editColor, setEditColor] = useState<string>("gold");
   const [editIcon, setEditIcon] = useState<string>(GROUP_ICONS[0]);
   const [editRolloverEnabled, setEditRolloverEnabled] = useState(false);
+  const [editIsEmergencyFund, setEditIsEmergencyFund] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const { data: archivedGroups } = useArchivedGroups(showArchived);
 
@@ -41,13 +43,14 @@ export default function GroupsPage() {
     try {
       await apiFetch("/api/groups", {
         method: "POST",
-        body: JSON.stringify({ name, budgetCap: Number(budgetCap), color, icon, rolloverEnabled }),
+        body: JSON.stringify({ name, budgetCap: Number(budgetCap), color, icon, rolloverEnabled, isEmergencyFund }),
       });
       setName("");
       setBudgetCap("");
       setColor("gold");
       setIcon(GROUP_ICONS[0]);
       setRolloverEnabled(false);
+      setIsEmergencyFund(false);
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
     } catch (err) {
@@ -91,13 +94,22 @@ export default function GroupsPage() {
     }
   }
 
-  function startEdit(id: string, currentName: string, currentCap: number, currentColor: string, currentIcon: string, currentRollover: boolean) {
+  function startEdit(
+    id: string,
+    currentName: string,
+    currentCap: number,
+    currentColor: string,
+    currentIcon: string,
+    currentRollover: boolean,
+    currentIsEmergencyFund: boolean
+  ) {
     setEditingId(id);
     setEditName(currentName);
     setEditCap(String(currentCap));
     setEditColor(currentColor);
     setEditIcon(currentIcon);
     setEditRolloverEnabled(currentRollover);
+    setEditIsEmergencyFund(currentIsEmergencyFund);
   }
 
   async function handleEditSave(id: string) {
@@ -111,6 +123,7 @@ export default function GroupsPage() {
           color: editColor,
           icon: editIcon,
           rolloverEnabled: editRolloverEnabled,
+          isEmergencyFund: editIsEmergencyFund,
         }),
       });
       setEditingId(null);
@@ -135,19 +148,10 @@ export default function GroupsPage() {
         )}
       </section>
 
-      <form
-        onSubmit={handleCreate}
-        className="neu-raised flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:p-6"
-      >
+      <form onSubmit={handleCreate} className="neu-raised flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:p-6">
         <div className="w-full sm:min-w-[200px] sm:flex-1">
-          <NeuInput
-            label="Group name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <NeuInput label="Group name" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
-
         <div className="w-full sm:min-w-[160px]">
           <NeuInput
             label="Budget cap"
@@ -159,7 +163,6 @@ export default function GroupsPage() {
             required
           />
         </div>
-
         <div className="w-full sm:min-w-[140px]">
           <NeuSelect label="Color" value={color} onChange={(e) => setColor(e.target.value)}>
             {GROUP_COLOR_KEYS.map((key) => (
@@ -169,7 +172,6 @@ export default function GroupsPage() {
             ))}
           </NeuSelect>
         </div>
-
         <div className="w-full sm:min-w-[110px]">
           <NeuSelect label="Icon" value={icon} onChange={(e) => setIcon(e.target.value)}>
             {GROUP_ICONS.map((glyph) => (
@@ -179,22 +181,27 @@ export default function GroupsPage() {
             ))}
           </NeuSelect>
         </div>
-
-        <div className="flex w-full items-center justify-between gap-4 sm:ml-auto sm:w-auto">
-          <NeuButton type="submit" variant="accent" className="w-full sm:w-auto">
-            Add group
-          </NeuButton>
-
-          <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
-            <input
-              type="checkbox"
-              checked={rolloverEnabled}
-              onChange={(e) => setRolloverEnabled(e.target.checked)}
-              className="focus-ring h-4 w-4 accent-(--color-accent)"
-            />
-            Roll over unspent cap
-          </label>
-        </div>
+        <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
+          <input
+            type="checkbox"
+            checked={rolloverEnabled}
+            onChange={(e) => setRolloverEnabled(e.target.checked)}
+            className="focus-ring h-4 w-4 accent-(--color-accent)"
+          />
+          Roll over unspent cap
+        </label>
+        <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
+          <input
+            type="checkbox"
+            checked={isEmergencyFund}
+            onChange={(e) => setIsEmergencyFund(e.target.checked)}
+            className="focus-ring h-4 w-4 accent-(--color-accent)"
+          />
+          Emergency Fund (absorbs other groups' overage)
+        </label>
+        <NeuButton type="submit" variant="accent" className="w-full sm:w-auto">
+          Add group
+        </NeuButton>
       </form>
       {error && (
         <div className="flex flex-wrap items-center gap-3">
@@ -253,6 +260,15 @@ export default function GroupsPage() {
                   />
                   Roll over unspent cap
                 </label>
+                <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
+                  <input
+                    type="checkbox"
+                    checked={editIsEmergencyFund}
+                    onChange={(e) => setEditIsEmergencyFund(e.target.checked)}
+                    className="focus-ring h-4 w-4 accent-(--color-accent)"
+                  />
+                  Emergency Fund
+                </label>
                 <div className="flex gap-3">
                   <NeuButton type="button" variant="accent" onClick={() => handleEditSave(group.id)}>
                     Save
@@ -268,10 +284,25 @@ export default function GroupsPage() {
                   <h3 className="flex min-w-0 items-center gap-2 truncate font-medium">
                     <span aria-hidden>{group.icon}</span>
                     <span className="truncate">{group.name}</span>
+                    {group.isEmergencyFund && (
+                      <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide text-(--color-accent-strong)">
+                        🛡️ EF
+                      </span>
+                    )}
                   </h3>
                   <div className="flex shrink-0 gap-3">
                     <button
-                      onClick={() => startEdit(group.id, group.name, group.baseCap, group.color, group.icon, group.rolloverEnabled)}
+                      onClick={() =>
+                        startEdit(
+                          group.id,
+                          group.name,
+                          group.baseCap,
+                          group.color,
+                          group.icon,
+                          group.rolloverEnabled,
+                          group.isEmergencyFund
+                        )
+                      }
                       className="focus-ring text-xs text-(--color-text-muted) hover:text-(--color-accent)"
                     >
                       Edit
@@ -290,6 +321,11 @@ export default function GroupsPage() {
                 {group.rolloverEnabled && (
                   <p className="text-xs" style={{ color: groupColor(group.color).accent }}>
                     Rollover on{group.rolloverAmount > 0 ? ` · +${currency(group.rolloverAmount)} carried in` : ""}
+                  </p>
+                )}
+                {group.isEmergencyFund && group.drawnFromOverage > 0 && (
+                  <p className="text-xs text-(--color-danger)">
+                    Drawn: {currency(group.drawnFromOverage)} to cover other groups&apos; overage
                   </p>
                 )}
               </div>

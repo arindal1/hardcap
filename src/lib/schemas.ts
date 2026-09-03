@@ -21,6 +21,7 @@ export const createGroupSchema = z.object({
   color: z.enum(GROUP_COLOR_KEYS as [string, ...string[]]).optional(),
   icon: z.string().trim().min(1).max(4).optional(),
   rolloverEnabled: z.boolean().optional(),
+  isEmergencyFund: z.boolean().optional(),
 });
 
 export const updateGroupSchema = z.object({
@@ -29,6 +30,7 @@ export const updateGroupSchema = z.object({
   color: z.enum(GROUP_COLOR_KEYS as [string, ...string[]]).optional(),
   icon: z.string().trim().min(1).max(4).optional(),
   rolloverEnabled: z.boolean().optional(),
+  isEmergencyFund: z.boolean().optional(),
 });
 
 export const createExpenseSchema = z.object({
@@ -64,4 +66,24 @@ export const expenseFilterSchema = z.object({
   groupId: z.string().uuid().optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
+});
+
+export const createGoalSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  targetAmount: z.number().positive(),
+  icon: z.string().trim().min(1).max(4).optional(),
+});
+
+export const updateGoalSchema = z.object({
+  name: z.string().trim().min(1).max(60).optional(),
+  targetAmount: z.number().positive().optional(),
+  icon: z.string().trim().min(1).max(4).optional(),
+});
+
+export const contributeGoalSchema = z.object({
+  amount: z.number().refine((n) => n !== 0, "Amount must not be zero"),
+});
+
+export const generateMonthEndReviewSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format"),
 });

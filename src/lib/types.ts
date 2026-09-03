@@ -1,4 +1,4 @@
-import type { BudgetHealthGrade } from "@/lib/budget";
+import type { BudgetHealthGrade, BurnRate, SpendIntensity } from "@/lib/budget";
 
 export type GroupWithBalance = {
   id: string;
@@ -13,6 +13,8 @@ export type GroupWithBalance = {
   remaining: number;
   isOverCap: boolean;
   overageAmount: number;
+  isEmergencyFund: boolean;
+  drawnFromOverage: number;
 };
 
 export type Expense = {
@@ -48,6 +50,8 @@ export type DashboardSummary = {
   groups: GroupWithBalance[];
   budgetHealth: BudgetHealth;
   previousMonthClosedUnderBudget: boolean | null;
+  burnRate: BurnRate;
+  spendHeatmap: { date: string; intensity: SpendIntensity }[];
 };
 
 export type InsightSnapshot = {
@@ -55,4 +59,21 @@ export type InsightSnapshot = {
   month: string;
   requestedAt: string;
   responseText: string;
+};
+
+export type MonthEndReviewSnapshot = {
+  id: string;
+  month: string;
+  generatedAt: string;
+  responseText: string;
+};
+
+export type Goal = {
+  id: string;
+  name: string;
+  icon: string;
+  targetAmount: number;
+  savedAmount: number;
+  isCompleted: boolean;
+  completedAt: string | null;
 };

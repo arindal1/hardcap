@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/db";
-import { computeGroupBalance, computeRolloverAmount, computeUnallocatedIncome } from "@/lib/budget";
+import {
+  computeEmergencyFundBalance,
+  computeGroupBalance,
+  computeRolloverAmount,
+  computeUnallocatedIncome,
+} from "@/lib/budget";
+import { getTotalActiveGoalSaved } from "@/lib/services/goals";
 
 function currentMonth(): string {
   return new Date().toISOString().slice(0, 7);
@@ -56,13 +62,36 @@ export async function listGroupsWithBalances(userId: string, month = currentMont
     }
   }
 
-  return groups.map((group) => {
+  const withBalances = groups.map((group) => {
     const spent = spentMap.get(group.id) ?? 0;
     const baseCap = Number(group.budgetCap);
     const rolloverAmount = group.rolloverEnabled ? rolloverByGroup.get(group.id) ?? 0 : 0;
     const balance = computeGroupBalance(baseCap + rolloverAmount, spent);
-    return { ...group, budgetCap: baseCap, baseCap, rolloverAmount, ...balance };
+    return { ...group, budgetCap: baseCap, baseCap, rolloverAmount, ...balance, drawnFromOverage: 0 };
   });
+
+  // The Emergency Fund absorbs every other group's overage instead of the
+  // user seeing negative balances scattered across groups - see
+  // lib/budget.ts computeEmergencyFundBalance.
+  const emergencyFund = withBalances.find((g) => g.isEmergencyFund);
+  if (!emergencyFund) return withBalances;
+
+  const totalOverage = withBalances
+    .filter((g) => !g.isEmergencyFund)
+    .reduce((sum, g) => sum + g.overageAmount, 0);
+  const efBalance = computeEmergencyFundBalance(emergencyFund.cap, emergencyFund.spent, totalOverage);
+
+  return withBalances.map((group) =>
+    group.id === emergencyFund.id
+      ? {
+          ...group,
+          remaining: efBalance.remaining,
+          isOverCap: efBalance.isDepleted,
+          overageAmount: efBalance.isDepleted ? -efBalance.remaining : 0,
+          drawnFromOverage: efBalance.drawnFromOverage,
+        }
+      : group
+  );
 }
 
 export async function getUnallocatedIncome(userId: string) {
@@ -72,13 +101,34 @@ export async function getUnallocatedIncome(userId: string) {
     select: { budgetCap: true },
   });
   const totalCaps = groups.reduce((sum, g) => sum + Number(g.budgetCap), 0);
-  return computeUnallocatedIncome(Number(user.monthlyIncome), totalCaps);
+  const totalGoalSaved = await getTotalActiveGoalSaved(userId);
+  return computeUnallocatedIncome(Number(user.monthlyIncome), totalCaps, totalGoalSaved);
+}
+
+export class EmergencyFundConflictError extends Error {
+  constructor() {
+    super("Only one active group can be the Emergency Fund");
+  }
 }
 
 export async function createGroup(
   userId: string,
-  data: { name: string; budgetCap: number; color?: string; icon?: string; rolloverEnabled?: boolean }
+  data: {
+    name: string;
+    budgetCap: number;
+    color?: string;
+    icon?: string;
+    rolloverEnabled?: boolean;
+    isEmergencyFund?: boolean;
+  }
 ) {
+  if (data.isEmergencyFund) {
+    const conflict = await prisma.expenseGroup.findFirst({
+      where: { userId, isArchived: false, isEmergencyFund: true },
+    });
+    if (conflict) throw new EmergencyFundConflictError();
+  }
+
   const group = await prisma.expenseGroup.create({
     data: { userId, ...data },
   });
@@ -91,10 +141,24 @@ export async function createGroup(
 export async function updateGroup(
   userId: string,
   groupId: string,
-  data: { name?: string; budgetCap?: number; color?: string; icon?: string; rolloverEnabled?: boolean }
+  data: {
+    name?: string;
+    budgetCap?: number;
+    color?: string;
+    icon?: string;
+    rolloverEnabled?: boolean;
+    isEmergencyFund?: boolean;
+  }
 ) {
   const existing = await prisma.expenseGroup.findFirst({ where: { id: groupId, userId } });
   if (!existing) return null;
+
+  if (data.isEmergencyFund) {
+    const conflict = await prisma.expenseGroup.findFirst({
+      where: { userId, isArchived: false, isEmergencyFund: true, NOT: { id: groupId } },
+    });
+    if (conflict) throw new EmergencyFundConflictError();
+  }
 
   const group = await prisma.expenseGroup.update({
     where: { id: groupId },

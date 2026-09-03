@@ -17,11 +17,12 @@ src/app/
 
   (app)/                        Authenticated route group, shares layout.tsx + NavBar
     layout.tsx
-    dashboard/page.tsx          Overall/group balances, unallocated income, charts, income editor
-    groups/page.tsx              Create/edit/archive budget groups
+    dashboard/page.tsx          Overall/group balances, unallocated income, burn rate, heatmap, charts, income editor
+    groups/page.tsx              Create/edit/archive budget groups, Emergency Fund toggle
     expenses/page.tsx            Rapid expense entry, table with filter/sort/inline edit
+    goals/page.tsx                Goal "pots" - create, contribute/withdraw, progress
     lending/page.tsx              Lending ledger, settle toggle
-    insight/page.tsx               On-demand Gemini insight + history
+    insight/page.tsx               On-demand Gemini insight + history, month-end review generator
 
   api/                          Route handlers - see API.md for full contract
     auth/[...nextauth]/route.ts   NextAuth v5 catch-all
@@ -31,17 +32,25 @@ src/app/
     groups/[id]/route.ts            PATCH (update) / DELETE (archive)
     expenses/route.ts               GET (filtered list) / POST (create)
     expenses/[id]/route.ts           PATCH / DELETE
+    goals/route.ts                    GET / POST
+    goals/[id]/route.ts                PATCH / DELETE
+    goals/[id]/contribute/route.ts      POST - signed deposit/withdrawal
     lending/route.ts                GET / POST
     lending/[id]/route.ts            PATCH / DELETE
-    dashboard/summary/route.ts       GET aggregate dashboard payload
+    dashboard/summary/route.ts       GET aggregate dashboard payload (incl. burnRate, spendHeatmap)
     insight/route.ts                  POST - request Gemini insight (60s cooldown)
     insight/history/route.ts           GET - past insight snapshots
+    month-end-review/route.ts          GET pending months / POST generate (cached per month)
+    month-end-review/history/route.ts   GET past reviews
 
 src/components/
   NavBar.tsx                    App navigation
   NeuButton.tsx / NeuInput.tsx    Neumorphic form primitives - reuse, don't recreate
-  AmbientField.tsx               react-three-fiber ambient WebGL backdrop (login + dashboard only)
+  AmbientField.tsx               react-three-fiber ambient WebGL backdrop (login + dashboard only), `intensity` prop scales drift/opacity with burn rate
   RevealOnMount.tsx               GSAP entrance animation wrapper
+  BurnRatePanel.tsx               Dashboard: spend % vs. time-elapsed % pace bar
+  SpendingHeatmap.tsx             Dashboard: GitHub-style daily spend-intensity calendar
+  NotificationCenter.tsx          Mounted in (app)/layout.tsx - derives toasts/sound/browser notifications from dashboard summary data, in-tab only
   charts/
     SpendVsBudgetChart.tsx         Recharts - spend vs. cap per group
     SpendOverTimeChart.tsx          Recharts - cumulative daily spend
@@ -50,17 +59,20 @@ src/components/
 src/lib/
   db.ts                         Prisma client singleton
   auth.ts                       NextAuth v5 config (providers, callbacks, session strategy)
-  budget.ts                     Pure balance math - no framework/DB imports, unit-test target
+  budget.ts                     Pure balance/burn-rate/heatmap/Emergency Fund math - no framework/DB imports, unit-test target
   schemas.ts                     All Zod input schemas, one per endpoint payload
-  gemini.ts                      Server-only Gemini REST client
-  types.ts                        Shared client-side types (e.g. GroupWithBalance, DashboardSummary)
+  gemini.ts                      Server-only Gemini REST client (insight + month-end review prompts)
+  types.ts                        Shared client-side types (e.g. GroupWithBalance, DashboardSummary, Goal)
   api-client.ts                   Typed fetch wrapper - components must go through this, not raw fetch
-  queries.ts                      TanStack Query hooks (useGroups, useExpenses, etc.) - components call these
+  queries.ts                      TanStack Query hooks (useGroups, useExpenses, useGoals, etc.) - components call these
   services/
-    groups.ts                     Group CRUD, live balance computation, unallocated income
+    groups.ts                     Group CRUD, live balance computation, unallocated income, Emergency Fund overage absorption
     expenses.ts                    Expense CRUD, filtering, ownership checks
     lending.ts                     Lending entry CRUD, settle/unsettle
     insight.ts                     Gemini insight orchestration, 60s cooldown, snapshot persistence
+    goals.ts                       Goal CRUD, signed contribute/withdraw ledger, active-goal saved total
+    month-end-review.ts            On-demand cached AI month-end report generation
+    analytics.ts                   Burn rate + spending heatmap live aggregation
 
 docs/
   PRD.md                         Product requirements - source of truth for product behavior

@@ -67,7 +67,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Reading the nonce middleware set on the request is what makes Next.js
-  // apply it to the inline scripts/styles it injects for hydration - without
+  // apply it to the inline scripts/styles it injects for hydration — without
   // this read, the nonce in the CSP response header never matches anything
   // in the rendered HTML and the browser blocks every inline script/style.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
