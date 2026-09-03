@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXTAUTH_URL ?? "https://hardcap.onrender.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = ["/", "/login", "/signup"];

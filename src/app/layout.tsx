@@ -23,7 +23,7 @@ const fraunces = Fraunces({
   style: ["normal", "italic"],
 });
 
-const siteUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXTAUTH_URL ?? "https://hardcap.onrender.com";
 const title = "HardCap";
 const description =
   "HardCap is a personal expense and budget tracker: set hard spending caps per category, log expenses in seconds, and see your real-time remaining balance - no drift, no spreadsheets.";
@@ -42,6 +42,8 @@ export const metadata: Metadata = {
     "spending caps",
     "monthly budget planner",
     "money lending tracker",
+    "arindal",
+    "arindal char"
   ],
   authors: [{ name: "HardCap" }],
   robots: {
