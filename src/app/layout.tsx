@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Geist_Mono, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { GrainOverlay } from "@/components/GrainOverlay";
 import { Footer } from "@/components/Footer";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -63,6 +64,19 @@ export const metadata: Metadata = {
     description,
     images: ["/opengraph-image"],
   },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#121216",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -79,6 +93,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <GrainOverlay />
+        <ServiceWorkerRegister />
         <Providers>{children}</Providers>
         <Footer />
       </body>

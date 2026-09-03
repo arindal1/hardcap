@@ -19,7 +19,9 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const groups = await listGroupsWithBalances(session.user.id);
   const totalSpent = groups.reduce((sum: number, g: GroupWithBalance) => sum + g.spent, 0);
   const unallocatedIncome = await getUnallocatedIncome(session.user.id);

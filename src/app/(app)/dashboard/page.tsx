@@ -65,6 +65,16 @@ export default function DashboardPage() {
     () => buildDailySeries(expenses, data?.monthlyIncome ?? 0),
     [expenses, data?.monthlyIncome]
   );
+  const [showAllGroups, setShowAllGroups] = useState(false);
+  const topGroupIds = useMemo(() => {
+    if (!data?.groups) return new Set<string>();
+    return new Set(
+      [...data.groups]
+        .sort((a, b) => b.remaining - a.remaining)
+        .slice(0, 2)
+        .map((g) => g.id)
+    );
+  }, [data?.groups]);
 
   async function handleIncomeSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -165,9 +175,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {data.groups.map((group, i) => {
             const color = groupColor(group.color);
+            const collapsedOnMobile = !topGroupIds.has(group.id) && !showAllGroups;
             return (
-              <RevealOnMount key={group.id} delay={i * 0.05}>
-                <div className="neu-raised neu-pressable p-6 transition-transform duration-300 hover:-translate-y-1">
+              <div key={group.id} className={collapsedOnMobile ? "hidden sm:block" : undefined}>
+              <RevealOnMount delay={i * 0.05}>
+                <div className="neu-raised neu-pressable flex h-full flex-col p-6 transition-transform duration-300 hover:-translate-y-1">
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="flex min-w-0 items-center gap-2 truncate font-medium">
                       <span aria-hidden>{group.icon}</span>
@@ -192,7 +204,7 @@ export default function DashboardPage() {
                       <> · +{currency(group.rolloverAmount)} rolled over</>
                     )}
                   </p>
-                  <div className="neu-inset mt-4 h-2 w-full overflow-hidden">
+                  <div className="neu-inset mt-auto h-2 w-full overflow-hidden">
                     <div
                       className="h-full transition-[width] duration-500 ease-out"
                       style={{
@@ -203,9 +215,18 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </RevealOnMount>
+              </div>
             );
           })}
         </div>
+        {data.groups.length > 2 && (
+          <button
+            onClick={() => setShowAllGroups((v) => !v)}
+            className="focus-ring self-start text-xs text-(--color-text-muted) hover:text-(--color-accent) sm:hidden"
+          >
+            {showAllGroups ? "Show less" : `Show ${data.groups.length - 2} more group${data.groups.length - 2 === 1 ? "" : "s"}`}
+          </button>
+        )}
       </section>
 
       <ScrollReveal className="flex flex-col gap-5" stagger>
@@ -219,8 +240,8 @@ export default function DashboardPage() {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal className="grid grid-cols-1 gap-5 lg:grid-cols-2" stagger>
-        <p className="eyebrow lg:col-span-2">05 - Pace &amp; patterns</p>
+      <ScrollReveal className="grid grid-cols-1 gap-5 lg:grid-cols-3" stagger>
+        <p className="eyebrow lg:col-span-3">05 - Pace &amp; patterns</p>
         <BurnRatePanel burnRate={data.burnRate} />
         <div className="lg:col-span-2">
           <SpendingHeatmap days={data.spendHeatmap} />

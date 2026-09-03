@@ -28,6 +28,7 @@ export function ScrollReveal({
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (!ref.current) return;
     const targets = stagger ? Array.from(ref.current.children) : ref.current;
+    if (Array.isArray(targets) && targets.length === 0) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         targets,

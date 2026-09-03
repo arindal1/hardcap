@@ -148,11 +148,11 @@ export default function GroupsPage() {
         )}
       </section>
 
-      <form onSubmit={handleCreate} className="neu-raised flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:p-6">
-        <div className="w-full sm:min-w-[200px] sm:flex-1">
-          <NeuInput label="Group name" value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div className="w-full sm:min-w-[160px]">
+      <form onSubmit={handleCreate} className="neu-raised flex flex-col gap-6 p-4 sm:p-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="sm:col-span-2 lg:col-span-2">
+            <NeuInput label="Group name" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
           <NeuInput
             label="Budget cap"
             type="number"
@@ -162,8 +162,6 @@ export default function GroupsPage() {
             onChange={(e) => setBudgetCap(e.target.value)}
             required
           />
-        </div>
-        <div className="w-full sm:min-w-[140px]">
           <NeuSelect label="Color" value={color} onChange={(e) => setColor(e.target.value)}>
             {GROUP_COLOR_KEYS.map((key) => (
               <option key={key} value={key}>
@@ -171,8 +169,6 @@ export default function GroupsPage() {
               </option>
             ))}
           </NeuSelect>
-        </div>
-        <div className="w-full sm:min-w-[110px]">
           <NeuSelect label="Icon" value={icon} onChange={(e) => setIcon(e.target.value)}>
             {GROUP_ICONS.map((glyph) => (
               <option key={glyph} value={glyph}>
@@ -181,27 +177,31 @@ export default function GroupsPage() {
             ))}
           </NeuSelect>
         </div>
-        <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
-          <input
-            type="checkbox"
-            checked={rolloverEnabled}
-            onChange={(e) => setRolloverEnabled(e.target.checked)}
-            className="focus-ring h-4 w-4 accent-(--color-accent)"
-          />
-          Roll over unspent cap
-        </label>
-        <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
-          <input
-            type="checkbox"
-            checked={isEmergencyFund}
-            onChange={(e) => setIsEmergencyFund(e.target.checked)}
-            className="focus-ring h-4 w-4 accent-(--color-accent)"
-          />
-          Emergency Fund (absorbs other groups' overage)
-        </label>
-        <NeuButton type="submit" variant="accent" className="w-full sm:w-auto">
-          Add group
-        </NeuButton>
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
+            <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
+              <input
+                type="checkbox"
+                checked={rolloverEnabled}
+                onChange={(e) => setRolloverEnabled(e.target.checked)}
+                className="focus-ring h-4 w-4 accent-(--color-accent)"
+              />
+              Roll over unspent cap
+            </label>
+            <label className="flex items-center gap-2 text-xs text-(--color-text-secondary)">
+              <input
+                type="checkbox"
+                checked={isEmergencyFund}
+                onChange={(e) => setIsEmergencyFund(e.target.checked)}
+                className="focus-ring h-4 w-4 accent-(--color-accent)"
+              />
+              Emergency Fund (absorbs other groups' overage)
+            </label>
+          </div>
+          <NeuButton type="submit" variant="accent" className="w-full sm:w-auto">
+            Add group
+          </NeuButton>
+        </div>
       </form>
       {error && (
         <div className="flex flex-wrap items-center gap-3">

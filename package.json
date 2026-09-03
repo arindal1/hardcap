@@ -1,6 +1,6 @@
 {
   "name": "hardcap",
-  "version": "0.5.0",
+  "version": "0.3.2",
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
